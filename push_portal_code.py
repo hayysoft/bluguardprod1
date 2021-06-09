@@ -7,6 +7,3 @@ X('git add .')
 X(f'git commit -m "Make changes - {time.ctime()}"')
 X('git push origin master')
 
-
-
-

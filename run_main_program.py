@@ -9,8 +9,8 @@ import datetime as dt
 
 
 X = lambda s: os.system(s)
-os.chdir('D:\\Scripts')
-X('python Main_Program.py')
+# os.chdir('D:\\Scripts')
+# X('python Main_Program.py')
 
 # X('python Process_Device_Alerts.py')
 # X('python Send_Reminder_For_Survey_Completion.py')
@@ -74,3 +74,21 @@ from multiprocessing import Process
 #     p3.join()
 #     p4.join()
 
+
+
+config = {
+    'host': 'bluguardprod1.mysql.database.azure.com',
+    'user': 'bluguardprod1@bluguardprod1',
+    'password': 'DoNotHack2021!',
+    'database': 'bluguarddb',
+    'client_flags': [mysql.ClientFlag.SSL],
+    'ssl_ca': '',
+}
+
+
+Connector = mysql.connect(**config)
+
+Cursor = Connector.cursor()
+Cursor.execute('SELECT * FROM TBL_Wearer')
+results = Cursor.fetchall()
+print(results)

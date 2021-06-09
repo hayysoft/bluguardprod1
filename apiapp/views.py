@@ -19,14 +19,17 @@ import json
 import mysql.connector as mysql
 
 
+config = {
+    'host': 'bluguardprod1.mysql.database.azure.com',
+    'user': 'bluguardprod1@bluguardprod1',
+    'password': 'DoNotHack2021!',
+    'database': 'bluguarddb',
+    'client_flags': [mysql.ClientFlag.SSL],
+    'ssl_ca': '',
+}
+
 def Create_Connector_To_DB():
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 	Cursor.execute('SET GLOBAL connect_timeout = 10')
@@ -42,13 +45,7 @@ def Process_Files_For_Discharded_Users(files,
 
 
 def Get_Device_ID_For_Symptom_Check_In(Wearer_ID):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -75,13 +72,7 @@ def Get_Device_ID_For_Symptom_Check_In(Wearer_ID):
 # @require_http_methods(['POST'])
 # @csrf_exempt
 def Crest_CR03_Symptoms_Check_In(request):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 	query = '''
@@ -131,13 +122,7 @@ def Crest_CR03_Symptoms_Check_In(request):
 @require_http_methods(['POST'])
 @csrf_exempt
 def Crest_CR03_Check_Out_Patient(request):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -193,13 +178,7 @@ def Crest_CR03_Check_Out_Patient(request):
 
 
 def Get_Patient_Tag_Checkout_Status(request, Wearer_ID):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 	query = '''
@@ -256,13 +235,7 @@ def Post_Creat_Checkin_Api(request):
 
 
 def Fetch_Crest_TBL_Patient():
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -324,13 +297,7 @@ def Post_Data_To_API(request):
 
 
 def Check_Band_Tag(Band_Tag):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -360,13 +327,7 @@ def Post_CR03_Registration(request):
 	if band_tag_check == 0:
 		results = 0
 	else:
-		Connector = mysql.connect(
-			user=os.getenv('BluguardDB_User'),
-			password=os.getenv('BluguardDB_Pwd'),
-			host='localhost',
-			port=os.getenv('BluguardDB_Port'),
-			database=os.getenv('BluguardDB_Name')
-		)
+		Connector = mysql.connect(**config)
 
 		Cursor = Connector.cursor()
 
@@ -399,13 +360,7 @@ def Post_CR03_Registration(request):
 @require_http_methods(['POST'])
 @csrf_exempt
 def Post_Wearer_Login(request):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -443,13 +398,7 @@ def Post_Wearer_Login(request):
 
 
 def Get_Wearer_All_Devices(request, Wearer_ID):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -492,13 +441,7 @@ def Get_Wearer_All_Devices(request, Wearer_ID):
 
 
 def Get_Wearer_Alert(request, Wearer_ID):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -530,13 +473,7 @@ def Get_Wearer_Alert(request, Wearer_ID):
 
 
 def Get_Wearer_Message(request, Wearer_ID):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -571,13 +508,7 @@ def Get_Wearer_Message(request, Wearer_ID):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def Get_All_Users_Data(request):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -595,13 +526,7 @@ def Get_All_Users_Data(request):
 
 
 def Get_Wearer_Survey(request, Daily_Survey_Session, Wearer_ID):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -654,13 +579,7 @@ def Post_Wearer_Survey(request):
 	Daily_Survey_Session = data['Daily_Survey_Session']
 	Wearer_ID = data['Wearer_ID']
 
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -719,13 +638,7 @@ def Post_Wearer_Survey(request):
 @require_http_methods(['POST'])
 @csrf_exempt
 def Delete_Message(request):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -747,13 +660,7 @@ def Delete_Message(request):
 
 
 def Get_All_Users(request):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -775,13 +682,7 @@ def Get_All_Users(request):
 
 
 def Fetch_One_Or_Many(field, tablename, query):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -820,13 +721,7 @@ def Get_Alert(request, Wearer_ID='NULL'):
 
 
 def Get_User_Message(request, User_id):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -856,13 +751,7 @@ def Get_User_Message(request, User_id):
 
 
 def Fetch_One(field, query):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -914,9 +803,21 @@ def Get_User_ID(request, User_Login):
 
 
 def Get_Subscribed_Device(request, User_id='NULL'):
-	Cursor = Fetch_One(User_id,
-				  '''SELECT Device_ID FROM tbl_subscription
-					 WHERE User_ID = %s''')
+	Connector = mysql.connect(**config)
+
+	Cursor = Connector.cursor()
+
+	if User_id == 'NULL':
+		Cursor.execute(f'SELECT * FROM tbl_subscription')
+	else:
+		query = '''SELECT Device_ID FROM tbl_subscription
+					 WHERE User_ID = %s'''
+		parameter = (User_id,)
+		Cursor.execute(query, parameter)
+
+	# Cursor = Fetch_One(User_id,
+	# 			  '''SELECT Device_ID FROM tbl_subscription
+	# 				 WHERE User_ID = %s''')
 
 	results = Cursor.fetchall()
 	values = []
@@ -930,13 +831,7 @@ def Get_Subscribed_Device(request, User_id='NULL'):
 
 
 def Get_All_Unsubscribed_Device(request):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -989,13 +884,7 @@ def Get_Unsubscribed_Device(request, User_id='NULL'):
 
 
 def Get_All_Device(request):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -1038,13 +927,7 @@ def Get_Wearer(request, Device_ID='NULL'):
 
 
 def Get_Device_Vital(request, Device_ID='NULL'):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -1074,13 +957,7 @@ def Get_Device_Vital(request, Device_ID='NULL'):
 
 
 def Get_Ack(request, Alert_ID):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -1110,13 +987,7 @@ def Get_Ack(request, Alert_ID):
 
 
 def Post_Update_Values(field1, field2, query):
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -1138,13 +1009,7 @@ def Post_Add_Subscription(request):
 	User_ID = data['User_ID']
 	Wearer_ID = data['Wearer_ID']
 
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -1174,13 +1039,7 @@ def Post_Change_Password_Wearer(request):
 	Wearer_ID = data['Wearer_ID']
 	Wearer_Pwd = data['Wearer_Pwd']
 
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -1210,13 +1069,7 @@ def Post_Change_Password(request):
 	if User_ID == 'NULL' or New_Password == 'NULL':
 		results = 0
 	else:
-		Connector = mysql.connect(
-			user=os.getenv('BluguardDB_User'),
-			password=os.getenv('BluguardDB_Pwd'),
-			host='localhost',
-			port=os.getenv('BluguardDB_Port'),
-			database=os.getenv('BluguardDB_Name')
-		)
+		Connector = mysql.connect(**config)
 
 		Cursor = Connector.cursor()
 
@@ -1251,13 +1104,7 @@ def Post_Change_Email(request):
 	if User_ID == 'NULL' or New_Email == 'NULL':
 		results = 0
 	else:
-		Connector = mysql.connect(
-			user=os.getenv('BluguardDB_User'),
-			password=os.getenv('BluguardDB_Pwd'),
-			host='localhost',
-			port=os.getenv('BluguardDB_Port'),
-			database=os.getenv('BluguardDB_Name')
-		)
+		Connector = mysql.connect(**config)
 
 		Cursor = Connector.cursor()
 		query = '''SELECT * FROM tbl_user
@@ -1288,13 +1135,7 @@ def Post_Acknowledgement_Alert(request):
 	User_ID = data['User_ID']
 	Alert_ID = data['Alert_ID']
 
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
@@ -1322,13 +1163,7 @@ def Post_User_Login(request):
 	username = data.get('User_Name')
 	password = data.get('User_Pwd')
 
-	Connector = mysql.connect(
-		user=os.getenv('BluguardDB_User'),
-		password=os.getenv('BluguardDB_Pwd'),
-		host='localhost',
-		port=os.getenv('BluguardDB_Port'),
-		database=os.getenv('BluguardDB_Name')
-	)
+	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 

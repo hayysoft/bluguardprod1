@@ -1,6 +1,7 @@
 from pathlib import Path
 import django_heroku
 from datetime import timedelta
+import mysql.connector as mysql
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -74,15 +75,17 @@ WSGI_APPLICATION = 'apiproject.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        # 'ENGINE': 'django.db.backends.sqlite3',
+        # 'NAME': BASE_DIR / 'db.sqlite3',
 
-        # 'ENGINE': 'django.db.backends.mysql',
-        # 'NAME': 'bluguarddb',
-        # 'USER': 'root',
-        # 'PASSWORD': 'Hayysoft',
-        # 'HOST': 'localhost',
-        # 'PORT': '3306',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'bluguarddb',
+        'USER': 'bluguardprod1@bluguardprod1',
+        'PASSWORD': 'DoNotHack2021!',
+        'HOST': 'bluguardprod1.mysql.database.azure.com',
+        'PORT': '3306',
+        'client_flags': [mysql.ClientFlag.SSL],
+        'OPTIONS': {'ssl': True},
     }
 }
 

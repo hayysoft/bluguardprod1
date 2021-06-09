@@ -337,8 +337,9 @@
                 // Initialize and add the map
 
 
-                let locations = '{{ value|latitude_longitude }}';
-                locations = JSON.parse(locations);
+                // let locations = '{{ value|latitude_longitude }}';
+                // locations = JSON.parse(locations);
+                locations = [];
                 for (let i = 0; i < locations.length; i++) {
                     locations[i][1] = Number(locations[i][1]);
                     locations[i][2] = Number(locations[i][2]);
