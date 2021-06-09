@@ -1,0 +1,444 @@
+{% extends "homepage.html" %}
+{% load static %}
+
+{% block title %}
+    <title>Communication</title>
+{% endblock %}
+
+{% block style %}
+    <style>
+        .communication-main {
+            margin: auto;
+            width: 100%;
+            /*background-image: url("{% static 'Background-For-All-Subpages.png' %}");*/
+
+        }
+        .communication-header {
+            margin: auto;
+            width: 100%;
+        }
+        .communication-selection {
+            margin: auto;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .communication-selection li a {
+            text-decoration: none;
+        }
+        .communication-selection li {
+            border: 1px solid #ccc;
+            background: #0B2C4B;
+        }
+        .communication-selection li a {
+            color: white;
+            width: 130px;
+            text-align: center;
+            padding: 4px 6px;
+            /*padding: 2px 15px;*/
+        }
+        .communication-body {
+            margin-top: 25px;
+        }
+        .chat-div {
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+        .chat-div a {
+            text-decoration: none;
+        }
+        .chat-box {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border: 1px solid #ccc;
+        }
+        .chat {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #ccc;
+            width: 250px;
+            margin: 20px;
+        }
+        .top-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 15%;
+            width: 100%;
+            padding: 5px;
+        }
+        .top-section-title {
+            font-size: 20px;
+            padding-left: 6px;
+            padding-right: 6px;
+        }
+        .add-remove a {
+            text-decoration: none;
+            font-size: 20px;
+            border: 1px solid #ccc;
+            padding-left: 6px;
+            padding-right: 6px;
+        }
+        .middle-section {
+            height: 70%;
+        }
+        .bottom-section {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 15%;
+            border-top: 1px solid #ccc;
+            width: 100%;
+        }
+        .support-div {
+            border: 1px solid #ccc;
+            padding: 15px;
+            width: 50%;
+            margin: auto;
+            margin-top: 20px;
+        }
+        .chat-popup {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #ccc;
+            width: 30%;
+            padding: 2px;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+        .first-popup {
+            width: 100%;
+            height: 5%;
+            padding: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+        .second-popup {
+            width: 100%;
+            height: 20%;
+            padding: 5px;
+            border-bottom: 1px solid #ccc;
+        }
+        .third-popup {
+            width: 100%;
+            height: 70%;
+            padding: 5px;
+        }
+        .third-popup-chats {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ccc;
+        }
+        .third-popup-chats a {
+            text-decoration: none;
+        }
+        .chats, .supports, .messages,
+        .broadcast-message, .focused-message {
+            display: none;
+        }
+        .chat-popup {
+            position: fixed;
+            top: -100%;
+            left: 52%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            width: 550px;
+            padding: 10px;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.80);
+            transition: .5s;
+            background-image: linear-gradient(lightblue, lightblue, white, white);
+            visibility: hidden;
+        }
+        .chat-popup.active {
+            visibility: visible;
+            top: 50%;
+        }
+        .fa-times-circle {
+            color: red;
+            cursor: pointer;
+        }
+        .messages-header {
+            list-style: none;
+            margin-top: 30px;
+            margin-bottom: 15px;
+        }
+        .messages-header li {
+            display: inline-block;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            width: 110px;
+            text-align: center;
+        }
+        .broadcast,
+        .focused {
+            border: 1px solid #ccc;
+            width: 100%;
+            margin: auto;
+            padding: 20px;
+        }
+        .broadcast ul,
+        .focused ul {
+            list-style: none;
+        }
+        .broadcast ul li,
+        .focused ul li {
+            display: inline-block;
+        }
+        .focused {
+            margin-top: 15px;
+        }
+        .broadcast-select a,
+        .focused-select a {
+            text-decoration: none;
+            background: #0B2C4B;
+            color: white;
+        }
+        .broadcast-select,
+        .focused-select {
+            background: #0B2C4B;
+        }
+        .support-btn {
+            background: #0B2C4B;
+            width: 100%;
+            padding: 7px 0px;
+            margin-top: 10px;
+            border: none;
+            outline: none;
+            border-radius: 3px;
+            color: white;
+        }
+        .communication-main .communication-header .communication-selection .chat-icon a img,
+        .communication-main .communication-header .communication-selection .message-icon a img,
+        .communication-main .communication-header .communication-selection .support-icon a img  {
+            max-width: 17px;
+            min-width: 17px;
+        }
+    </style>
+{% endblock %}
+
+
+{% block content %}
+    <div class="communication-main">
+        <div class="row communication-header">
+            <ul class="communication-selection">
+                <li class="chat-icon">
+                    <a class="chat-select" href="#">
+                        <img src="{% static 'Communication_Icons/CHAT ICON.png' %}" alt="">
+                        &nbsp;Chat
+                    </a>
+                </li>
+                <li class="support-icon">
+                    <a class="support-select" href="#">
+                        <img src="{% static 'Communication_Icons/SUPPORT ICON.png' %}" alt="">
+                        &nbsp;Support
+                    </a>
+                </li>
+                <li class="message-icon">
+                    <a class="message-select" href="#">
+                        <img src="{% static 'Communication_Icons/MESSAGES ICON.png' %}" alt="">
+                        &nbsp;Messages
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div class="communication-body">
+            <div class="chat-div chats">
+                <h4>Chat</h4>
+                <a href="#" onclick="popupLoginToggle();">New Chat</a>
+                <div class="chat-box">
+                    <div class="chat chat-first">
+                        <div class="top-section">
+                            <div class="top-section-title">
+                                <h6>Chat 1</h6>
+                            </div>
+                            <div class="add-remove">
+                                <a href="#">+</a>
+                                <a href="#">-</a>
+                            </div>
+                        </div>
+                        <div class="middle-section">
+                            <p>Random chat 1</p>
+                        </div>
+                        <div class="bottom-section">
+                            <div class="lines">
+                                <p></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat chat-first">
+                        <div class="top-section">
+                            <div class="top-section-title">
+                                <h6>Chat 1</h6>
+                            </div>
+                            <div class="add-remove">
+                                <a href="#">+</a>
+                                <a href="#">-</a>
+                            </div>
+                        </div>
+                        <div class="middle-section">
+                            <p>Random chat 2</p>
+                        </div>
+                        <div class="bottom-section">
+                            <div class="lines">
+                                <p></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat chat-first">
+                        <div class="top-section">
+                            <div class="top-section-title">
+                                <h6>Chat 1</h6>
+                            </div>
+                            <div class="add-remove">
+                                <a href="#">+</a>
+                                <a href="#">-</a>
+                            </div>
+                        </div>
+                        <div class="middle-section">
+                            <p>Random chat 3</p>
+                        </div>
+                        <div class="bottom-section">
+                            <div class="lines">
+                                <p></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="support-div supports">
+                <h6>HS Support</h6>
+                <div class="support-submit support-submit-box">
+                    <form action="." method="post">
+                        {% csrf_token %}
+                        <input type="email" class="form-control" id="email" name="email" placeholder="Enter Email">
+                        <textarea name="message" class="form-control mt-2" placeholder="Type your message here..." style="resize: none;"></textarea>
+                        <input type="submit" class="support-btn" class="btn btn-primary mt-2">
+                    </form>
+                </div>
+            </div>
+
+            <div class="message-div messages">
+                <div class="">
+                    <ul class="messages-header">
+                        <li class="broadcast-select">
+                            <a href="#">Broadcast</a>
+                        </li>
+                        <li class="focused-select">
+                            <a href="#">Focused</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="broadcast broadcast-message">
+                <div class="support-submit">
+                    <form action="." method="post">
+                        {% csrf_token %}
+                        <textarea name="message" class="form-control mt-2" placeholder="Type your message here..." style="resize: none;"></textarea>
+                        <input type="submit" class="support-btn" class="btn btn-primary form-control mt-2">
+                    </form>
+                </div>
+            </div>
+
+            <div class="focused focused-message">
+                <div class="support-submit">
+                    <form action="." method="post">
+                        {% csrf_token %}
+                        <input type="text" class="form-control" id="email" name="email" placeholder="Enter nickname">
+                        <textarea name="message" class="form-control mt-2" placeholder="Type your message here..." style="resize: none;"></textarea>
+                        <input type="submit" class="support-btn" class="btn btn-primary form-control mt-2">
+                    </form>
+                </div>
+            </div>
+
+
+            <div class="chat-popup">
+                <i class="fas fa-times-circle" onclick="popupLoginToggle();"></i>
+                <div class="first-popup">
+                    <span>New Chat</span>
+                </div>
+                <div class="second-popup">
+                    <input type="search" class="form-control form-control-sm mb-1">
+                    <input type="button" class="btn btn-primary btn-sm" name="" value="Search">
+                </div>
+                <div class="third-popup">
+                    <h6>Results</h6>
+                    <div class="third-popup-chats">
+                        <span>Whatever 1</span>
+                        <a href="#">Chat</a>
+                        <a href="#">Call</a>
+                    </div>
+                    <div class="third-popup-chats">
+                        <span>Whatever 1</span>
+                        <a href="#">Chat</a>
+                        <a href="#">Call</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block javascript %}
+    <script>
+        var chat_div = $('.chat-div');
+        var chat_select = $('.chat-select');
+
+        const toggleClasseVisibility = (tag1, tag2, class_) => {
+            chat_select.click(function(e) {
+                tag2.toggle(class_);
+            });
+        }
+
+        toggleClasseVisibility(chat_select, chat_div, 'chats');
+
+        var support_div = $('.support-div');
+        var support_select = $('.support-select');
+
+        support_select.click(function(e) {
+            e.preventDefault();
+            support_div.toggle('supports');
+        });
+
+        const popupLoginToggle = () => {
+            const popup = document.querySelector('.chat-popup');
+            popup.classList.toggle('active');
+        }
+
+        var message_div = $('.message-div');
+        var message_select = $('.message-select');
+
+        message_select.click(function(e) {
+            e.preventDefault();
+            message_div.toggle('active');
+        });
+
+        var broadcast_select = $('.broadcast-select');
+        var broadcast_message = $('.broadcast');
+        broadcast_select.click(function(e) {
+            e.preventDefault();
+            broadcast_message.toggle('broadcast-message');
+        });
+
+        var focused_select = $('.focused-select');
+        var focused_message = $('.focused');
+        focused_select.click(function(e) {
+            e.preventDefault();
+            focused_message.toggle('focused-message');
+        });
+    </script>
+{% endblock %}
+
+

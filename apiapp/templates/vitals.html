@@ -1,0 +1,407 @@
+{% extends "homepage.html" %}
+{% load static %}
+{%load gateway_lat_lng %}
+
+{% block title %}
+    <title>Vitals Surveillance</title>
+{% endblock %}
+
+{% block style %}
+    <style>
+        .vitals-main {
+            /*margin-top: 10px;*/
+        }
+        .vitals-header {
+            margin: auto;
+            width: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .vitals-header li {
+            background: #0B2C4B;
+            padding: 7px 0px;
+            width: 33%;
+        }
+        .vitals-header li a {
+            text-decoration: none;
+            color: white;
+        }
+        .gateways-table {
+            margin-top: 10px;
+        }
+        .gateways,
+        .devices,
+        .alerts {
+            display: none;
+        }
+        .vitals-header .alert-icon a img  {
+            max-width: 17px;
+            min-width: 17px;
+        }
+        .vitals-header .device-icon a img,
+        .vitals-header .gateway-icon a img {
+            width: 100%;
+            max-width: 20px;
+            min-width: 20px;
+        }
+        th, td {
+            text-align: center;
+            font-size: 15px;
+        }
+    </style>
+{% endblock %}
+
+{% block googlemap %}
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDLU-BsprUwoj-kRf8Q7Iidu9Th1jRBzjw&callback=initMap&libraries=&v=weekly" async></script>
+    <script>
+        // Initialize and add the map
+
+        let locations = '{{ value|latitude_longitude }}';
+        locations = JSON.parse(locations);
+        for (let i = 0; i < locations.length; i++) {
+            locations[i][1] = Number(locations[i][1]);
+            locations[i][2] = Number(locations[i][2]);
+        }
+
+        function initMap() {
+            var map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 3,
+                center: new google.maps.LatLng(1.359100, 103.967320),
+                mapTypeId: google.maps.MapTypeId.ROADMAP,
+            });
+
+            var infowindow = new google.maps.InfoWindow();
+
+            var maker, i;
+
+            for (i = 0; i < locations.length; i++) {
+                marker = new google.maps.Marker({
+                    position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+                    map: map,
+                    title: locations[i][0]
+                });
+
+                google.maps.event.addListener(marker, 'click', (function(marker, i) {
+                    return function() {
+                        infowindow.setContent(locations[i][0]);
+                        infowindow.open(map, marker);
+                    }
+                })(marker, i));
+            }
+        }
+        initMap();
+    </script>
+{% endblock %}
+
+{% block content %}
+    <div class="vitals-main">
+        <ul class="vitals-header">
+            <li class="gateway-icon">
+                <a class="gateway-select" href="#">
+                    <img src="{% static 'GATEWAY ICON.png' %}" alt="">
+                    &nbsp;GATEWAYS
+                </a>
+            </li>
+            <li class="device-icon">
+                <a class="device-select" href="#">
+                    <img src="{% static 'AdminPage/DEVICE ICON.png' %}" alt="">
+                    &nbsp;DEVICES
+                </a>
+            </li>
+            <li class="alert-icon">
+                <a class="alert-select" href="#">
+                    <img src="{% static 'AdminPage/ALERT ICON.png' %}" alt="">
+                    &nbsp;ALERTS
+                </a>
+            </li>
+        </ul>
+
+        <div class="gateways-table gateways">
+            <table class="table table-striped table-hover" id="device-table">
+                <thead>
+                    <tr>
+                        <th>Animated</th>
+                        <th>Gateway_ID</th>
+                        <th>Location</th>
+                        <th>Last Read</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for gateway in gateways_ %}
+                        <tr>
+                            <td>{{ gateway.Alert_ID }}</td>
+                            <td>{{ gateway.Gateway_ID }}</td>
+                            <td>{{ gateway.Gateway_Location }}</td>
+                            <td>{{ gateway.Ack }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- Device_ID, Wearer_ID,
+        Device_Temp, Device_HR,
+        Device_O2,
+        Device_Last_Updated_Date,
+        Device_Last_Updated_Time,
+        Incorrect_Data_Flag,
+        Wearer_Nick -->
+        <div class="devices-table">
+            <table class="table table-striped table-hover" id="device-table">
+                <thead>
+                    <tr>
+                        <th>Device_Status</th>
+                        <!-- <th>Nickname</th> -->
+                        <th>Temp</th>
+                        <th>O2</th>
+                        <th>Bat</th>
+                        <th>HR</th>
+                        <th>Quality</th>
+                        <th>Last Read Date</th>
+                        <th>Last Read Time</th>
+                        <th>Serial No</th>
+                        <th>Device Mac</th>
+                    </tr>
+                </thead>
+                <tbody class="tbody-data">
+                    <!-- {% for device in devices_ %}
+                        <tr>
+                            {% if device.Device_Status == 'OFFLINE' %}
+                                <td style="color: red;">{{ device.Device_Status }}</td>
+                            {% else %}
+                                <td style="color: green;">{{ device.Device_Status }}</td>
+                            {% endif %}
+
+                            {% if device.Device_Temp > 37 %}
+                                <td style="color: red;">{{ device.Device_Temp }}</td>
+                            {% elif device.Device_Temp < 33 %}
+                                <td style="color: green;">{{ device.Device_Temp }}</td>
+                            {% else %}
+                                <td style="color: blue;">{{ device.Device_Temp }}</td>
+                            {% endif %}
+
+                            {% if device.Device_O2 > 78 %}
+                                <td style="color: red;">{{ device.Device_O2 }}</td>
+                            {% elif device.Device_O2 < 70 %}
+                                <td style="color: green;">{{ device.Device_O2 }}</td>
+                            {% else %}
+                                <td style="color: blue;">{{ device.Device_O2 }}</td>
+                            {% endif %}
+
+                            {% if device.Device_Bat_Level > 180 %}
+                                <td style="color: red;">{{ device.Device_Bat_Level }}</td>
+                            {% elif device.Device_Bat_Level < 50 %}
+                                <td style="color: green;">{{ device.Device_Bat_Level }}</td>
+                            {% else %}
+                                <td style="color: blue;">{{ device.Device_Bat_Level }}</td>
+                            {% endif %}
+
+                            <td>{{ device.Device_HR }}</td>
+                            {% if device.Incorrect_Data_Flag == 1 %}
+                                <td style="color: red;">Bad</td>
+                            {% else %}
+                                <td style="color: green;">Good</td>
+                            {% endif %}
+                            <td>{{ device.Device_Last_Updated_Date }}</td>
+                            <td>{{ device.Device_Last_Updated_Time }}</td>
+                            <td>{{ device.Device_Mac }}</td>
+                        </tr>
+                    {% endfor %} -->
+                </tbody>
+            </table>
+        </div>
+
+
+        <div class="alerts-table alerts">
+            <table class="table table-striped table-hover" id="device-table">
+                <thead>
+                    <tr>
+                        <th>Alert_ID</th>
+                        <th>Device</th>
+                        <th>Wearer</th>
+                        <th>Ack</th>
+                        <th>Alert Date/Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for alert in alerts_ %}
+                        <tr>
+                            <td>{{ alert.Alert_ID }}</td>
+                            <td>{{ alert.Device_ID }}</td>
+                            <td>{{ alert.Device_Last_Updated_Date }}</td>
+                            <td>{{ alert.Device_Last_Updated_Time }}</td>
+                            <td>{{ alert.Ack }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block javascript %}
+    <script>
+        const checkToggle = (tag, class_) => {
+            if (tag.hasClass(class_)) {
+                tag.toggle(class_)
+            }
+        }
+
+        const toggleClasseVisibility = (tag1, tag2, class_) => {
+            tag1.click(function(e) {
+                tag2.toggle(class_);
+            });
+        }
+
+        var gateway_select = $('.gateway-select');
+        var gateways_table = $('.gateways-table');
+
+        // var gateway_select = document.querySelector('.gateway-select');
+        // var gateway_select = document.querySelector('.gateways-table');
+
+        var device_select = $('.device-select');
+        var devices_table = $('.devices-table');
+
+        var alert_select = $('.alert-select');
+        var alerts_table = $('.alerts-table');
+
+        toggleClasseVisibility(gateway_select, gateways_table, 'gateways');
+        toggleClasseVisibility(device_select, devices_table, 'devices');
+        toggleClasseVisibility(alert_select, alerts_table, 'alerts');
+
+
+
+
+
+        let tbody = document.querySelector('.tbody-data');
+
+
+        function fetchDevices () {
+            fetch('http://52.237.83.22:5050/Lastest_Device_Data/')
+                .then(res => res.json())
+                .then(data => {
+                    tbody.innerHTML = '';
+                    let latest_data = data;
+                    ProcessLastestData(latest_data.lastest);
+                })
+                .catch(err => console.log(err));
+        }
+
+        let setInterval2 = setInterval(fetchDevices, 1000);
+
+        function TimeFormating(time) {
+            let t = time.replace("P0DT", "");
+            t = t.replace("H", ":");
+            t = t.replace("M", ":");
+            t = t.replace("S", "");
+            return t;
+        }
+
+        function ProcessLastestData(latest_data) {
+            for (let i = 0; i < latest_data.length; i++) {
+                let row = latest_data[i];
+                // console.log(row);
+                let time = TimeFormating(row.Device_Last_Updated_Time);
+                let tr = document.createElement('tr');
+
+                let deviceTemp = row.Device_Temp;
+                let deviceTempTag = document.createElement('td');
+                deviceTempTag.textContent = deviceTemp;
+                if (deviceTemp > 37) {
+                    deviceTempTag.style.color = 'red';
+                } else if (deviceTemp < 33) {
+                    deviceTempTag.style.color = 'green';
+                } else {
+                    deviceTempTag.style.color = 'blue';
+                }
+
+                let deviceO2 = row.Device_O2;
+                let deviceO2Tag = document.createElement('td');
+                deviceO2Tag.textContent = deviceO2;
+                if (deviceO2 > 78) {
+                    deviceO2Tag.style.color = 'red';
+                } else if (deviceO2 < 70) {
+                    deviceO2Tag.style.color = 'green';
+                } else {
+                    deviceO2Tag.style.color = 'blue';
+                }
+
+                let deviceBatLevel = row.Device_Bat_Level;
+                let deviceBatLevelTag = document.createElement('td');
+                deviceBatLevelTag.textContent = deviceBatLevel;
+                if (deviceBatLevel > 180) {
+                    deviceBatLevelTag.style.color = 'red';
+                } else if (deviceBatLevel < 50) {
+                    deviceBatLevelTag.style.color = 'green';
+                } else {
+                    deviceBatLevelTag.style.color = 'blue';
+                }
+
+                let deviceHR = row.Device_HR;
+                let deviceHRTag = document.createElement('td');
+                deviceHRTag.textContent = deviceHR;
+
+                if (deviceHR > 100) {
+                    deviceHRTag.style.color = 'red';
+                } else if (deviceHR < 50) {
+                    deviceHRTag.style.color = 'red';
+                } else {
+                    deviceHRTag.style.color = 'green';
+                }
+
+                let deviceIncorrectDataFlag = row.Incorrect_Data_Flag;
+                let deviceIncorrectDataFlagTag = document.createElement('td');
+                if (deviceIncorrectDataFlag === 1) {
+                    deviceIncorrectDataFlagTag.textContent = "Bad";
+                    deviceIncorrectDataFlagTag.style.color = 'red';
+                } else {
+                    deviceIncorrectDataFlagTag.textContent = "Good";
+                    deviceIncorrectDataFlagTag.style.color = 'green';
+                }
+
+                let deviceStatus = row.Device_Status;
+                let deviceStatusTag = document.createElement('td');
+                deviceStatusTag.textContent = deviceStatus;
+                if (deviceStatus === 'OFFLINE') {
+                    deviceStatusTag.style.color = 'red';
+                    deviceIncorrectDataFlagTag.textContent = "NA";
+                    deviceIncorrectDataFlagTag.style.color = 'red';
+                } else if (deviceStatus === 'ONLINE') {
+                    deviceStatusTag.style.color = 'green';
+                }
+
+                let deviceLastUpdateDate = row.Device_Last_Updated_Date;
+                let deviceLastUpdateDateTag = document.createElement('td');
+                deviceLastUpdateDateTag.textContent = deviceLastUpdateDate;
+
+                let deviceLastUpdateTime = TimeFormating(row.Device_Last_Updated_Time);
+                let deviceLastUpdateTimeTag = document.createElement('td');
+                deviceLastUpdateTimeTag.textContent = deviceLastUpdateTime;
+
+                let deviceMac = row.Device_Mac;
+                let deviceMacTag = document.createElement('td');
+                deviceMacTag.textContent = deviceMac;
+
+                let Device_Serial_No = row.Device_Serial_No;
+                let Device_Serial_NoTag = document.createElement('td');
+                Device_Serial_NoTag.textContent = Device_Serial_No;
+
+                tr.appendChild(deviceStatusTag);
+                tr.appendChild(deviceTempTag);
+                tr.appendChild(deviceO2Tag);
+                tr.appendChild(deviceBatLevelTag);
+                tr.appendChild(deviceHRTag);
+                tr.appendChild(deviceIncorrectDataFlagTag);
+                tr.appendChild(deviceLastUpdateDateTag);
+                tr.appendChild(deviceLastUpdateTimeTag);
+                tr.appendChild(Device_Serial_NoTag);
+                tr.appendChild(deviceMacTag);
+
+                tbody.appendChild(tr);
+            }
+        }
+    </script>
+{% endblock %}
+
+

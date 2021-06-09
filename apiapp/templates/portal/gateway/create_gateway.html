@@ -1,0 +1,35 @@
+{% extends "homepage.html" %}
+
+{% block title %}
+    <title>Create Gateway</title>
+{% endblock %}
+
+{% block style %}
+	<style>
+		.update-gateway {
+			margin-top: 50px;
+		}
+	</style>
+{% endblock %}
+
+
+{% block content %}
+    {% include "base.html" %}
+    <div class="update-gateway"></div>
+	<div class="row">
+		<a href="{% url 'apiapp:gateway' %}">Go back to Gateways</a>
+	</div>
+	<div class="card" id="create-device">
+		<div class="card-title">
+			<h4>Create a Gateway</h4>
+			<hr>
+		</div>
+		<div class="card-body">
+			<form action="." method="POST">
+				{% csrf_token %}
+				{{ form }}
+				<input type="submit" value="Create Gateway" class="btn btn-primary mt-2">
+			</form>
+		</div>
+	</div>
+{% endblock %}

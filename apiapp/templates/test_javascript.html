@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test JS</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: auto;
+        }
+        tr, th, td {
+            border: 1px solid #ccc;
+        }
+        th, td {
+            padding: 4px 8px;
+        }
+    </style>
+</head>
+<body>
+    <h3>JavaScript Testing</h3>
+
+    <table class="table table-striped table-hover" id="device-table">
+        <thead>
+            <tr>
+                <th>Device_Status</th>
+                <!-- <th>Nickname</th> -->
+                <th>Temp</th>
+                <th>O2</th>
+                <th>Bat</th>
+                <th>HR</th>
+                <th>Quality</th>
+                <th>Last Read Date</th>
+                <th>Last Read Time</th>
+                <th>Device Mac</th>
+            </tr>
+        </thead>
+        <tbody class="tbody-data">
+        </tbody>
+    </table>
+
+
+    <script>
+        let tbody = document.querySelector('.tbody-data');
+
+
+        function fetchDevices () {
+            fetch('http://52.237.83.22:5050/Lastest_Device_Data/')
+                .then(res => res.json())
+                .then(data => {
+                    tbody.innerHTML = '';
+                    let latest_data = data;
+                    ProcessLastestData(latest_data.lastest);
+                })
+                .catch(err => console.log(err));
+        }
+
+        let setInterval1 = setInterval(fetchDevices, 1000);
+
+        function TimeFormating(time) {
+            let t = time.replace("P0DT", "");
+            t = t.replace("H", ":");
+            t = t.replace("M", ":");
+            t = t.replace("S", "");
+            return t;
+        }
+
+        function ProcessLastestData(latest_data) {
+            for (let i = 0; i < latest_data.length; i++) {
+                let row = latest_data[i];
+                // console.log(row);
+                let time = TimeFormating(row.Device_Last_Updated_Time);
+                let tr = document.createElement('tr');
+
+                let deviceStatus = row.Device_Status;
+                let deviceStatusTag = document.createElement('td');
+                deviceStatusTag.textContent = deviceStatus;
+                if (deviceStatus === 'OFFLINE') {
+                    deviceStatusTag.style.color = 'red';
+                } else if (deviceStatus === 'ONLINE') {
+                    deviceStatusTag.style.color = 'green';
+                }
+
+                let deviceTemp = row.Device_Temp;
+                let deviceTempTag = document.createElement('td');
+                deviceTempTag.textContent = deviceTemp;
+                if (deviceTemp > 37) {
+                    deviceTempTag.style.color = 'red';
+                } else if (deviceTemp < 33) {
+                    deviceTempTag.style.color = 'green';
+                } else {
+                    deviceTempTag.style.color = 'blue';
+                }
+
+                let deviceO2 = row.Device_O2;
+                let deviceO2Tag = document.createElement('td');
+                deviceO2Tag.textContent = deviceO2;
+                if (deviceO2 > 78) {
+                    deviceO2Tag.style.color = 'red';
+                } else if (deviceO2 < 70) {
+                    deviceO2Tag.style.color = 'green';
+                } else {
+                    deviceO2Tag.style.color = 'blue';
+                }
+
+                let deviceBatLevel = row.Device_Bat_Level;
+                let deviceBatLevelTag = document.createElement('td');
+                deviceBatLevelTag.textContent = deviceBatLevel;
+                if (deviceBatLevel > 180) {
+                    deviceBatLevelTag.style.color = 'red';
+                } else if (deviceBatLevel < 50) {
+                    deviceBatLevelTag.style.color = 'green';
+                } else {
+                    deviceBatLevelTag.style.color = 'blue';
+                }
+
+                let deviceHR = row.Device_HR;
+                let deviceHRTag = document.createElement('td');
+                deviceHRTag.textContent = deviceHR;
+
+                let deviceIncorrectDataFlag = row.Incorrect_Data_Flag;
+                let deviceIncorrectDataFlagTag = document.createElement('td');
+                if (deviceIncorrectDataFlag === 1) {
+                    deviceIncorrectDataFlagTag.textContent = "Bad";
+                    deviceIncorrectDataFlagTag.style.color = 'red';
+                } else {
+                    deviceIncorrectDataFlagTag.textContent = "Good";
+                    deviceIncorrectDataFlagTag.style.color = 'green';
+                }
+
+                let deviceLastUpdateDate = row.Device_Last_Updated_Date;
+                let deviceLastUpdateDateTag = document.createElement('td');
+                deviceLastUpdateDateTag.textContent = deviceLastUpdateDate;
+
+                let deviceLastUpdateTime = TimeFormating(row.Device_Last_Updated_Time);
+                let deviceLastUpdateTimeTag = document.createElement('td');
+                deviceLastUpdateTimeTag.textContent = deviceLastUpdateTime;
+
+                let deviceMac = row.Device_Mac;
+                let deviceMacTag = document.createElement('td');
+                deviceMacTag.textContent = deviceMac;
+
+                tr.appendChild(deviceStatusTag);
+                tr.appendChild(deviceTempTag);
+                tr.appendChild(deviceO2Tag);
+                tr.appendChild(deviceBatLevelTag);
+                tr.appendChild(deviceHRTag);
+                tr.appendChild(deviceIncorrectDataFlagTag);
+                tr.appendChild(deviceLastUpdateDateTag);
+                tr.appendChild(deviceLastUpdateTimeTag);
+                tr.appendChild(deviceMacTag);
+
+                tbody.appendChild(tr);
+
+                // tr.innerHTML = `
+                //     <td>${ row.Device_Status }</td>
+                //     <td>${ row.Device_Temp }</td>
+                //     <td>${ row.Device_O2 }</td>
+                //     <td>${ row.Device_Bat_Level }</td>
+                //     <td>${ row.Device_HR }</td>
+                //     <td>${ row.Incorrect_Data_Flag }</td>
+                //     <td>${ row.Device_Last_Updated_Date }</td>
+                //     <td>${ time }</td>
+                //     <td>${ row.Device_Mac }</td>
+                // `;
+            }
+        }
+    </script>
+</body>
+</html>

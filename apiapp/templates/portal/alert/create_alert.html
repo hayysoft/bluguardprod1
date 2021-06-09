@@ -1,0 +1,35 @@
+{% extends "homepage.html" %}
+
+{% block title %}
+    <title>Create Alert</title>
+{% endblock %}
+
+{% block style %}
+	<style>
+		.create-alert {
+			margin-top: 50px;
+		}
+	</style>
+{% endblock %}
+
+
+{% block content %}
+    {% include "base.html" %}
+    <div class="create-alert"></div>
+	<div class="row">
+		<a href="{% url 'apiapp:subscription' %}">Go back to Subscriptions</a>
+	</div>
+	<div class="card" id="create-device">
+		<div class="card-title">
+			<h4>Create a Subscription</h4>
+			<hr>
+		</div>
+		<div class="card-body">
+			<form action="." method="POST">
+				{% csrf_token %}
+				{{ form }}
+				<input type="submit" value="Create Subscription" class="btn btn-primary mt-2">
+			</form>
+		</div>
+	</div>
+{% endblock %}

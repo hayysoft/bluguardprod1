@@ -1,0 +1,59 @@
+{% extends "homepage.html" %}
+
+{% block title %}
+    <title>Alert</title>
+{% endblock %}
+
+{% block style %}
+	<style>
+		.main-div {
+			margin-top: 50px;
+		}
+	</style>
+{% endblock %}
+
+
+{% block content %}
+    {% include "base.html" %}
+	<div class="main-div">
+		<div class="row">
+			{% if messages %}
+				<ul class="messages" style="margin: auto; width: 50%;">
+				    {% for message in messages %}
+				    	<li{% if message.tags %} class=".bg-danger {{ message.tags }}"{% endif %} style="background: #e66d57; padding: 3px 8px;  border-radius: 3px;">
+				    		{{ message }}
+				    	</li>
+				    {% endfor %}
+				</ul>
+			{% endif %}
+		</div>
+		<table class="table table-striped table-hover" id="device-table">
+	  		<thead>
+	  			<tr>
+	  				<th>Alert_ID</th>
+	  				<th>Alert_Code</th>
+	  				<th>Alert_Date</th>
+	  				<th>Alert_Time</th>
+	  				<th>Device_ID</th>
+	  				<th>Delete</th>
+	  			</tr>
+	  		</thead>
+	  		<tbody>
+	  			{% for row in data %}
+					<tr class="table-active">
+						<td>{{ row.Alert_ID }}</td>
+						<td>{{ row.Alert_Code }}</td>
+						<td>{{ row.Alert_Date }}</td>
+						<td>{{ row.Alert_Time }}</td>
+						<td>{{ row.Device_ID }}</td>
+						<td>
+							<a href="{% url 'apiapp:Alert_Delete' row.Alert_ID %}">
+								Delete
+							</a>
+						</td>
+					</tr>
+				{% endfor %}
+	  		</tbody>
+		</table>
+	</div>
+{% endblock %}

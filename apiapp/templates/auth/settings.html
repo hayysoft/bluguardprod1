@@ -1,0 +1,62 @@
+{% extends "homepage.html" %}
+
+{% block title %}
+    <title>Communication</title>
+{% endblock %}
+
+{% block style %}
+    <style>
+        .settings-div {
+            margin: auto;
+            width: 75%;
+            margin-top: 30px;
+        }
+        .form-updare {
+            /*margin: auto;
+            width: 75%;*/
+            /*border: 1px solid #ccc;*/
+        }
+    </style>
+{% endblock %}
+
+
+{% block content %}
+    <div class="settings-div">
+        <div class="row">
+            {% if messages %}
+                <ul class="messages" style="margin: auto; width: 50%;">
+                    {% for message in messages %}
+                        <li class="bg-success" style="padding: 3px 8px;  border-radius: 3px;">
+                            {{ message }}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <p>
+            Username: {{ request.user.username }}
+        </p>
+        <p>
+            Email: {{ request.user.email }}
+        </p>
+
+        <br>
+        <div class="form-updare">
+            <form action="." method="post">
+                {% csrf_token %}
+                {{ form }}
+                <input type="submit" class="btn btn-primary mt-2 mb-2" style="width: 300px;" value="Update info">
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block javascript %}
+    <script>
+
+    </script>
+{% endblock %}
+
+
