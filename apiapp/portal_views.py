@@ -22,6 +22,9 @@ from .forms import (
 	SubscriptionCreateForm,
 	UserLoginForm, UserUpdateForm
 )
+from .models import (
+	TblDevice
+)
 
 
 
@@ -542,6 +545,7 @@ def Get_All_Device_For_Portal(request):
 	})
 
 
+
 @login_required
 def Device_View(request):
 	url = 'http://52.237.83.22:5050/devices/'
@@ -555,15 +559,18 @@ def Device_View(request):
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
 
-
+	devices = TblDevice.objects.all()
 
 	return render(request,
 				  'portal/device/device.html',
-				  {'note': 'Device Page',
-				   'data': data1,
-				   'latest_altert': data2,
-				   'gateways': gateways,
-				   'wearers': wearers})
+				  {
+				  	'note': 'Device Page',
+				   	'data': data1,
+				   	'latest_altert': data2,
+				   	'gateways': gateways,
+				   	'wearers': wearers,
+				   	'devices': devices
+				   })
 
 
 @login_required

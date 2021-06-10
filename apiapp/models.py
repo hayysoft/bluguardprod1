@@ -13,6 +13,9 @@ class TblAcknowledgement(models.Model):
         managed = False
         db_table = 'tbl_acknowledgement'
 
+    def __str__(self):
+        return f'{self.ack_id}'
+
 
 class TblAlert(models.Model):
     alert_id = models.CharField(db_column='Alert_ID', primary_key=True, max_length=50)  # Field name made lowercase.
@@ -26,6 +29,9 @@ class TblAlert(models.Model):
         managed = False
         db_table = 'tbl_alert'
 
+    def __str__(self):
+        return f'{self.alert_id}'
+
 
 class TblAlertCode(models.Model):
     alert_code = models.CharField(db_column='Alert_Code', primary_key=True, max_length=10)  # Field name made lowercase.
@@ -34,6 +40,9 @@ class TblAlertCode(models.Model):
     class Meta:
         managed = False
         db_table = 'tbl_alert_code'
+
+    def __str__(self):
+        return f'{self.alert_code}'
 
 
 class TblCrestPatient(models.Model):
@@ -47,6 +56,9 @@ class TblCrestPatient(models.Model):
     class Meta:
         managed = False
         db_table = 'tbl_crest_patient'
+
+    def __str__(self):
+        return f'{self.patient_id}'
 
 
 class TblDailySurvey(models.Model):
@@ -66,6 +78,9 @@ class TblDailySurvey(models.Model):
     class Meta:
         managed = False
         db_table = 'tbl_daily_survey'
+
+    def __str__(self):
+        return f'{self.daily_survey_id}'
 
 
 class TblDevice(models.Model):
@@ -91,6 +106,9 @@ class TblDevice(models.Model):
         managed = False
         db_table = 'tbl_device'
 
+    def __str__(self):
+        return f'{self.device_id}'
+
 
 class TblDeviceRawLength(models.Model):
     device_type = models.CharField(db_column='Device_Type', primary_key=True, max_length=50)  # Field name made lowercase.
@@ -99,6 +117,9 @@ class TblDeviceRawLength(models.Model):
     class Meta:
         managed = False
         db_table = 'tbl_device_raw_length'
+
+    def __str__(self):
+        return f'{self.device_type}'
 
 
 class TblGateway(models.Model):
@@ -115,6 +136,9 @@ class TblGateway(models.Model):
     class Meta:
         managed = False
         db_table = 'tbl_gateway'
+
+    def __str__(self):
+        return f'{self.gateway_id}'
 
 
 class TblIncoming(models.Model):
@@ -135,6 +159,9 @@ class TblIncoming(models.Model):
         managed = False
         db_table = 'tbl_incoming'
 
+    def __str__(self):
+        return f'{self.incoming_id}'
+
 
 class TblMessage(models.Model):
     message_id = models.CharField(db_column='Message_ID', primary_key=True, max_length=50)  # Field name made lowercase.
@@ -149,6 +176,9 @@ class TblMessage(models.Model):
         managed = False
         db_table = 'tbl_message'
 
+    def __str__(self):
+        return f'{self.message_id}'
+
 
 class TblOrganization(models.Model):
     org_id = models.CharField(db_column='Org_ID', primary_key=True, max_length=50)  # Field name made lowercase.
@@ -160,6 +190,9 @@ class TblOrganization(models.Model):
     class Meta:
         managed = False
         db_table = 'tbl_organization'
+
+    def __str__(self):
+        return f'{self.org_id}'
 
 
 class TblSubscription(models.Model):
@@ -173,6 +206,8 @@ class TblSubscription(models.Model):
         managed = False
         db_table = 'tbl_subscription'
 
+    def __str__(self):
+        return f'{self.subscription_id}'
 
 class TblUser(models.Model):
     user_id = models.CharField(db_column='User_ID', primary_key=True, max_length=50)  # Field name made lowercase.
@@ -186,6 +221,9 @@ class TblUser(models.Model):
         managed = False
         db_table = 'tbl_user'
 
+    def __str__(self):
+        return f'{self.user_id}'
+
 
 class TblWearer(models.Model):
     wearer_id = models.CharField(db_column='Wearer_ID', primary_key=True, max_length=50)  # Field name made lowercase.
@@ -195,6 +233,9 @@ class TblWearer(models.Model):
     class Meta:
         managed = False
         db_table = 'tbl_wearer'
+
+    def __str__(self):
+        return f'{self.wearer_id}'
 
 
 
