@@ -442,7 +442,6 @@ def Quanrantine_Surveillance_Data(request):
 		try:
 			Alert_ID = results[0][0]
 			data[row]['Alert_ID'] = Alert_ID
-			print(Alert_ID)
 		except Exception:
 			pass
 
