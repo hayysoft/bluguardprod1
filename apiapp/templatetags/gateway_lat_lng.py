@@ -25,24 +25,28 @@ config = {
 
 @register.simple_tag(name='top_five_alerts')
 def top_five_alerts():
-    # Connector = mysql.connect(**config)
+    Connector = mysql.connect(**config)
 
-    # Cursor = Connector.cursor()
+    Cursor = Connector.cursor()
 
     query = '''
         SELECT Alert_Date, Alert_Time, Device_ID
-        FROM tbl_alert LIMIT 6;
+        FROM tbl_alert ORDER BY Alert_Time DESC LIMIT 6;
     '''
-    # Cursor.execute(query)
-    # results = Cursor.fetchall()
+    Cursor.execute(query)
+    results = Cursor.fetchall()
 
-    # data = [
-    #     {
-    #         'Alert_Date': row[0],
-    #         'Alert_Time': row[1],
-    #         'Device_ID': row[2]
-    #     } for row in results
-    # ]
+    data = [
+        {
+            'Alert_Date': row[0],
+            'Alert_Time': row[1],
+            'Device_ID': row[2]
+        } for row in results
+    ]
+
+
+
+
     # alerts = TblAlert.objects.all()
     # data = []
     # for index, row in enumerate(alerts):
@@ -57,36 +61,39 @@ def top_five_alerts():
     #     }
 
     #     devices = TblDevice.objects.filter(device_id=device_id).values('device_temp', 'wearer')
-    #     print(devices)
+    #     for device_temp, wearer in devices:
+    #         obj = TblWearer.objects.filter(device_id=device_id)
+    #         if obj.exists():
+    #             row_='device_temp']
 
     #     data.append(row_)
 
     # print(data)
 
-    # for index, row in enumerate(results):
-    #     Device_ID = row[2]
-    #     query = '''
-    #         SELECT Device_Temp, Wearer_ID FROM tbl_device
-    #         WHERE Device_ID = %s
-    #     '''
-    #     parameter = (Device_ID,)
-    #     Cursor.execute(query, parameter)
-    #     Fetch_Results = Cursor.fetchall()
-    #     Temp = Fetch_Results[0][0]
-    #     data[index]['Device_Temp'] = Temp
+    for index, row in enumerate(results):
+        Device_ID = row[2]
+        query = '''
+            SELECT Device_Temp, Wearer_ID FROM tbl_device
+            WHERE Device_ID = %s
+        '''
+        parameter = (Device_ID,)
+        Cursor.execute(query, parameter)
+        Fetch_Results = Cursor.fetchall()
+        Temp = Fetch_Results[0][0]
+        data[index]['Device_Temp'] = Temp
 
-    #     Wearer_ID = Fetch_Results[0][1]
-    #     query = '''
-    #         SELECT Wearer_Nick FROM tbl_wearer
-    #         WHERE Wearer_ID = %s
-    #     '''
-    #     parameter = (Wearer_ID,)
-    #     Cursor.execute(query, parameter)
-    #     Fetch_Result = Cursor.fetchall()
-    #     Wearer_Nick = Fetch_Result[0][0]
-    #     data[index]['Wearer_Nick'] = Wearer_Nick
+        Wearer_ID = Fetch_Results[0][1]
+        query = '''
+            SELECT Wearer_Nick FROM tbl_wearer
+            WHERE Wearer_ID = %s
+        '''
+        parameter = (Wearer_ID,)
+        Cursor.execute(query, parameter)
+        Fetch_Result = Cursor.fetchall()
+        Wearer_Nick = Fetch_Result[0][0]
+        data[index]['Wearer_Nick'] = Wearer_Nick
 
-    return [] # data
+    return data
 
 
 

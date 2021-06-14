@@ -389,7 +389,15 @@ def Quanrantine_Surveillance_Data(request):
 	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
-	query = 'SELECT * FROM surveillance_page;'
+	query = '''
+		SELECT
+			Device_Status, Device_ID, Device_Last_Updated_Time,
+			Device_Last_Updated_Date, Wearer_ID
+		FROM
+			TBL_Device
+		WHERE
+			Device_Type = 'HSWB004';
+	'''
 	Cursor.execute(query)
 	results = Cursor.fetchall()
 	data = [
@@ -434,6 +442,7 @@ def Quanrantine_Surveillance_Data(request):
 		try:
 			Alert_ID = results[0][0]
 			data[row]['Alert_ID'] = Alert_ID
+			print(Alert_ID)
 		except Exception:
 			pass
 
