@@ -127,7 +127,7 @@ def Crest_CR03_Check_Out_Patient(request):
 	Cursor = Connector.cursor()
 
 	data = json.loads(request.body)
-	Band_Tag = data['Band_Tag']
+	Device_Tag = data['Device_Tag']
 
 	query = '''
 		SELECT Wearer_ID FROM tbl_wearer
@@ -142,18 +142,18 @@ def Crest_CR03_Check_Out_Patient(request):
 	query = '''
 		UPDATE Crest_TBL_Patient
 		SET Wearer_ID = %s
-	 	WHERE Band_Tag = %s'''
+	 	WHERE Device_Tag = %s'''
 	parameters = (Unassigned_Wearer_ID,
-				  Band_Tag)
+				  Device_Tag)
 	Cursor.execute(query, parameters)
 	Connector.commit()
 
 	query = '''
 		SELECT Patient_Tag FROM Crest_TBL_Patient
-		WHERE Band_Tag = %s
+		WHERE Device_Tag = %s AND Patient_Discharged = %s
 	'''
-	parameter = (Band_Tag,)
-	Cursor.execute(query, parameter)
+	parameters = (Device_Tag, 1)
+	Cursor.execute(query, parameters)
 	results = Cursor.fetchall()
 	Patient_Tag = results[0][0]
 
@@ -176,14 +176,71 @@ def Crest_CR03_Check_Out_Patient(request):
 
 
 
+@require_http_methods(['POST'])
+@csrf_exempt
+def Crest_CR03_Discharge_Patient(request):
+	Connector = mysql.connect(**config)
+
+	Cursor = Connector.cursor()
+
+	data = json.loads(request.body)
+	Device_Tag = data['Device_Tag']
+
+	query = '''
+		SELECT Wearer_ID FROM tbl_wearer
+		WHERE Wearer_Nick = %s LIMIT 1
+	'''
+	parameter = ('Unassigned',)
+	Cursor.execute(query, parameter)
+	results = Cursor.fetchall()
+	Unassigned_Wearer_ID = results[0][0]
+	print(Unassigned_Wearer_ID)
+
+	query = '''
+		UPDATE Crest_TBL_Patient
+		SET Wearer_ID = %s
+	 	WHERE Device_Tag = %s'''
+	parameters = (Unassigned_Wearer_ID,
+				  Device_Tag)
+	Cursor.execute(query, parameters)
+	Connector.commit()
+
+	query = '''
+		SELECT Patient_Tag FROM Crest_TBL_Patient
+		WHERE Device_Tag = %s AND Patient_Discharged = %s
+	'''
+	parameters = (Device_Tag, 1)
+	Cursor.execute(query, parameters)
+	results = Cursor.fetchall()
+	Patient_Tag = results[0][0]
+
+	query = '''
+		SELECT Device_Mac FROM TBL_Device
+		WHERE Device_Type = %s AND Wearer_ID = %s
+	'''
+	parameter = ('HSWB001', Unassigned_Wearer_ID,)
+	Cursor.execute(query, parameter)
+	results = Cursor.fetchall()
+	files = [file[0] for file in results]
+
+	Process_Files_For_Discharded_Users(
+		files, Patient_Tag
+	)
+
+	return JsonResponse({
+		'message': f'Wearer_Nick successfully set to Unassigned'
+	})
+
+
+
 
 def Get_Patient_Tag_Checkout_Status(request, Wearer_ID):
 	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 	query = '''
-		SELECT Patient_Tag, Patient_Checkout_Status
-		FROM Crest_TBL_Patient
+		SELECT Patient_Tag, Patient_Discharged
+		FROM TBL_Crest_Patient
 		WHERE Wearer_ID = %s
 	'''
 	parameter = (Wearer_ID,)
@@ -192,7 +249,7 @@ def Get_Patient_Tag_Checkout_Status(request, Wearer_ID):
 	data = [
 		{
 			'Patient_Tag': row[0],
-			'Patient_Checkout_Status': row[1]
+			'Patient_Discharged': row[1]
 		} for row in results
 	]
 	try:
@@ -248,8 +305,8 @@ def Fetch_Crest_TBL_Patient():
 	        SELECT * FROM tbl_device WHERE
 	        Device_Tag = %s
 	    '''
-	    Band_Tag = row[3]
-	    parameter = (Band_Tag,)
+	    Device_Tag = row[3]
+	    parameter = (Device_Tag,)
 	    Cursor.execute(query, parameter)
 	    results = Cursor.fetchall()
 	    for result in results:
@@ -296,14 +353,17 @@ def Post_Data_To_API(request):
 
 
 
-def Check_Band_Tag(Band_Tag):
+def Check_Device_Tag(Device_Tag):
 	Connector = mysql.connect(**config)
 
 	Cursor = Connector.cursor()
 
-	query = '''SELECT COUNT(*) FROM tbl_device
-                 WHERE Device_Tag = %s'''
-	parameter = (Band_Tag,)
+	query = '''SELECT COUNT(*) FROM TBL_Wearer
+                 WHERE Status = %s AND Wearer_ID IN (
+                 	SELECT Wearer_ID FROM TBL_Device
+                 	WHERE Device_Tag = %s
+                 )'''
+	parameter = ('Unassigned', Device_Tag)
 	Cursor.execute(query, parameter)
 	results = Cursor.fetchall()
 
@@ -319,34 +379,46 @@ def Check_Band_Tag(Band_Tag):
 def Post_CR03_Registration(request):
 	data = json.loads(request.body)
 	Patient_Tag = data['Patient_Tag']
-	Band_Tag = data['Band_Tag']
+	Device_Tag = data['Device_Tag']
 
-	band_tag_check = Check_Band_Tag(Band_Tag)
+	band_tag_check = Check_Device_Tag(Device_Tag)
 	results = None
 
 	if band_tag_check == 0:
 		results = 0
 	else:
 		Connector = mysql.connect(**config)
-
 		Cursor = Connector.cursor()
 
 		query = '''
-		INSERT INTO Crest_TBL_Patient
-		        (Patient_ID, Patient_Tag, Band_Tag,
+			UPDATE TBL_Wearer
+			SET Status = %s
+			WHERE Wearer_ID IN (
+				SELECT Wearer_ID FROM TBL_Device
+				WHERE Device_Tag = %s
+			)
+		'''
+		print(f'Device_Tag = {Device_Tag}')
+		parameters = ('Assigned', Device_Tag)
+		Cursor.execute(query, parameters)
+		Connector.commit()
+
+		query = '''
+		INSERT INTO TBL_Crest_Patient
+		        (Patient_ID, Patient_Tag, Device_Tag,
 		        Created_Date, Created_Time, Wearer_ID,
-		        Patient_Checkout_Status)
+		        Patient_Discharged)
 		VALUES ((SELECT Create_PK("PID")), %s, %s, CURDATE(),
 		        CURTIME(), (
 		            SELECT Wearer_ID FROM tbl_wearer
-		            WHERE Wearer_ID IN (
+		            WHERE Wearer_ID = (
 		                SELECT Wearer_ID FROM tbl_device
 		                WHERE Device_Tag = %s
 		            )
 		        ), %s)
 
 		'''
-		parameters = (Patient_Tag, Band_Tag, Band_Tag, 0)
+		parameters = (Patient_Tag, Device_Tag, Device_Tag, 0)
 		Cursor.execute(query, parameters)
 		Connector.commit()
 		results = 1
@@ -446,10 +518,12 @@ def Get_Wearer_Alert(request, Wearer_ID):
 	Cursor = Connector.cursor()
 
 	query = '''
-		SELECT * FROM TBL_Alert
+		SELECT Alert_ID, Alert_Code, Alert_Date,
+			   Alert_Time, Device_ID, Alert_Reading
+		FROM TBL_Alert
 		WHERE Device_ID IN
-		(SELECT Device_ID FROM tbl_device
-		WHERE Wearer_ID = %s)
+			(SELECT Device_ID FROM tbl_device
+			WHERE Wearer_ID = %s)
 	'''
 	parameter = (Wearer_ID,)
 	Cursor.execute(query, parameter)

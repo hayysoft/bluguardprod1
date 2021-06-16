@@ -86,9 +86,29 @@ config = {
 }
 
 
-Connector = mysql.connect(**config)
+# Connector = mysql.connect(**config)
 
-Cursor = Connector.cursor()
-Cursor.execute('SELECT * FROM TBL_Wearer')
-results = Cursor.fetchall()
-print(results)
+# Cursor = Connector.cursor()
+# Cursor.execute('SELECT * FROM TBL_Wearer')
+# results = Cursor.fetchall()
+# print(results)
+
+
+
+def Check_Device_Tag(Device_Tag):
+    Connector = mysql.connect(**config)
+
+    Cursor = Connector.cursor()
+
+    query = '''SELECT COUNT(*) FROM TBL_Wearer
+                 WHERE Status = %s AND Wearer_ID = (
+                    SELECT Wearer_ID FROM TBL_Device
+                    WHERE Device_Tag = %s
+                 )'''
+    parameter = ('Unassigned', Device_Tag)
+    Cursor.execute(query, parameter)
+    results = Cursor.fetchall()
+    print(results)
+
+
+Check_Device_Tag('CR03-0002')
