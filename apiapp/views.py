@@ -30,23 +30,29 @@ config = {
 
 def Create_Connector_To_DB():
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 	Cursor.execute('SET GLOBAL connect_timeout = 10')
 
 	return Cursor
 
 
-def Process_Files_For_Discharded_Users(files,
-									   Patient_Tag):
-	os.chdir('D:\\Scripts\\interview\\media')
-	for file in files:
-		os.rename(f'D:/Scripts/interview/media/{file}.json', f'D:/Scripts/interview/media/Discharged_Patients/{Patient_Tag}_{file}.json')
+def dictfetchall(cursor):
+	columns = [col[0] for col in cursor.description]
+	return [
+		dict(zip(columns, row)) for row in cursor.fetchall()
+	]
+
+
+def Process_Files_For_Discharded_Users(Device_Mac, Patient_Tag):
+	os.chdir('C:/Users/hayysoft/Documents/Scripts/interview/media')
+	try:
+		os.rename(f'C:/Users/hayysoft/Documents/Scripts/interview/media/{Device_Mac}.json', f'C:/Users/hayysoft/Documents/Scripts/interview/media/Discharged_Patients/{Patient_Tag}.json')
+	except FileNotFoundError:
+		pass
 
 
 def Get_Device_ID_For_Symptom_Check_In(Wearer_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''
@@ -73,7 +79,6 @@ def Get_Device_ID_For_Symptom_Check_In(Wearer_ID):
 # @csrf_exempt
 def Crest_CR03_Symptoms_Check_In(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 	query = '''
 		SELECT Daily_Survey_Q2_Y1,
@@ -123,120 +128,70 @@ def Crest_CR03_Symptoms_Check_In(request):
 @csrf_exempt
 def Crest_CR03_Check_Out_Patient(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	data = json.loads(request.body)
-	Device_Tag = data['Device_Tag']
+	Patient_Tag = data['Patient_Tag']
 
 	query = '''
-		SELECT Wearer_ID FROM tbl_wearer
-		WHERE Wearer_Nick = %s LIMIT 1
+		SELECT COUNT(*) FROM TBL_Crest_Patient
+		WHERE Patient_Tag = %s AND
+			  Patient_Discharged = %s
 	'''
-	parameter = ('Unassigned',)
-	Cursor.execute(query, parameter)
-	results = Cursor.fetchall()
-	Unassigned_Wearer_ID = results[0][0]
-	print(Unassigned_Wearer_ID)
+	parameters = (Patient_Tag, 0)
+	Cursor.execute(query, parameters)
+	results = dictfetchall(Cursor)
 
-	query = '''
-		UPDATE Crest_TBL_Patient
-		SET Wearer_ID = %s
-	 	WHERE Device_Tag = %s'''
-	parameters = (Unassigned_Wearer_ID,
-				  Device_Tag)
+	if len(results) == 0:
+		return JsonResponse({
+			'response': 'Patient ID does not exists OR already discharged'
+		})
+
+	query = '''SELECT Wearer_ID, Patient_ID FROM TBL_Crest_Patient
+				WHERE Patient_Tag = %s
+			'''
+	parameter = (Patient_Tag,)
+	Cursor.execute(query, parameter)
+	results = dictfetchall(Cursor)
+	Wearer_ID = results[0]['Wearer_ID']
+	Patient_ID = results[0]['Patient_ID']
+
+	query = '''UPDATE TBL_Wearer
+				SET Status = %s
+				WHERE Wearer_ID = %s
+			'''
+	parameters = ('Unassigned', Wearer_ID)
 	Cursor.execute(query, parameters)
 	Connector.commit()
 
-	query = '''
-		SELECT Patient_Tag FROM Crest_TBL_Patient
-		WHERE Device_Tag = %s AND Patient_Discharged = %s
-	'''
-	parameters = (Device_Tag, 1)
-	Cursor.execute(query, parameters)
-	results = Cursor.fetchall()
-	Patient_Tag = results[0][0]
-
-	query = '''
-		SELECT Device_Mac FROM TBL_Device
-		WHERE Wearer_ID = %s
-	'''
-	parameter = (Unassigned_Wearer_ID,)
-	Cursor.execute(query, parameter)
-	results = Cursor.fetchall()
-	files = [file[0] for file in results]
-
-	Process_Files_For_Discharded_Users(
-		files, Patient_Tag
-	)
-
-	return JsonResponse({
-		'message': f'Wearer_Nick successfully set to Unassigned'
-	})
-
-
-
-@require_http_methods(['POST'])
-@csrf_exempt
-def Crest_CR03_Discharge_Patient(request):
-	Connector = mysql.connect(**config)
-
-	Cursor = Connector.cursor()
-
-	data = json.loads(request.body)
-	Device_Tag = data['Device_Tag']
-
-	query = '''
-		SELECT Wearer_ID FROM tbl_wearer
-		WHERE Wearer_Nick = %s LIMIT 1
-	'''
-	parameter = ('Unassigned',)
-	Cursor.execute(query, parameter)
-	results = Cursor.fetchall()
-	Unassigned_Wearer_ID = results[0][0]
-	print(Unassigned_Wearer_ID)
-
-	query = '''
-		UPDATE Crest_TBL_Patient
-		SET Wearer_ID = %s
-	 	WHERE Device_Tag = %s'''
-	parameters = (Unassigned_Wearer_ID,
-				  Device_Tag)
+	query = '''UPDATE TBL_Crest_Patient
+				SET Patient_Discharged = %s
+				WHERE Patient_ID = %s
+			'''
+	parameters = (1, Patient_ID)
 	Cursor.execute(query, parameters)
 	Connector.commit()
 
-	query = '''
-		SELECT Patient_Tag FROM Crest_TBL_Patient
-		WHERE Device_Tag = %s AND Patient_Discharged = %s
-	'''
-	parameters = (Device_Tag, 1)
-	Cursor.execute(query, parameters)
-	results = Cursor.fetchall()
-	Patient_Tag = results[0][0]
-
-	query = '''
-		SELECT Device_Mac FROM TBL_Device
-		WHERE Device_Type = %s AND Wearer_ID = %s
-	'''
-	parameter = ('HSWB001', Unassigned_Wearer_ID,)
+	query = '''SELECT Device_Mac FROM TBL_Device
+				WHERE Wearer_ID = %s'''
+	parameter = (Wearer_ID,)
 	Cursor.execute(query, parameter)
-	results = Cursor.fetchall()
-	files = [file[0] for file in results]
+	results = dictfetchall(Cursor)
+	Device_Mac = results[0]['Device_Mac']
+	print(f'Device_Mac = {Device_Mac}')
 
 	Process_Files_For_Discharded_Users(
-		files, Patient_Tag
+		Device_Mac, Patient_Tag
 	)
 
 	return JsonResponse({
-		'message': f'Wearer_Nick successfully set to Unassigned'
+		'response': 'Successfull'
 	})
-
 
 
 
 def Get_Patient_Tag_Checkout_Status(request, Wearer_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 	query = '''
 		SELECT Patient_Tag, Patient_Discharged
@@ -293,7 +248,6 @@ def Post_Creat_Checkin_Api(request):
 
 def Fetch_Crest_TBL_Patient():
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = 'SELECT * FROM Crest_TBL_Patient'
@@ -355,7 +309,6 @@ def Post_Data_To_API(request):
 
 def Check_Device_Tag(Device_Tag):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''SELECT COUNT(*) FROM TBL_Wearer
@@ -433,7 +386,6 @@ def Post_CR03_Registration(request):
 @csrf_exempt
 def Post_Wearer_Login(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	data = json.loads(request.body)
@@ -471,7 +423,6 @@ def Post_Wearer_Login(request):
 
 def Get_Wearer_All_Devices(request, Wearer_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''
@@ -514,7 +465,6 @@ def Get_Wearer_All_Devices(request, Wearer_ID):
 
 def Get_Wearer_Alert(request, Wearer_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''
@@ -548,7 +498,6 @@ def Get_Wearer_Alert(request, Wearer_ID):
 
 def Get_Wearer_Message(request, Wearer_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''
@@ -583,7 +532,6 @@ def Get_Wearer_Message(request, Wearer_ID):
 @permission_classes([IsAuthenticated])
 def Get_All_Users_Data(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = 'SELECT * FROM tbl_user';
@@ -601,7 +549,6 @@ def Get_All_Users_Data(request):
 
 def Get_Wearer_Survey(request, Daily_Survey_Session, Wearer_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''
@@ -654,7 +601,6 @@ def Post_Wearer_Survey(request):
 	Wearer_ID = data['Wearer_ID']
 
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''
@@ -713,7 +659,6 @@ def Post_Wearer_Survey(request):
 @csrf_exempt
 def Delete_Message(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	data = json.loads(request.body)
@@ -735,7 +680,6 @@ def Delete_Message(request):
 
 def Get_All_Users(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = 'SELECT User_ID, User_Name FROM tbl_user';
@@ -757,7 +701,6 @@ def Get_All_Users(request):
 
 def Fetch_One_Or_Many(field, tablename, query):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	if field == 'NULL':
@@ -796,7 +739,6 @@ def Get_Alert(request, Wearer_ID='NULL'):
 
 def Get_User_Message(request, User_id):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = """SELECT * FROM TBL_Message
@@ -826,7 +768,6 @@ def Get_User_Message(request, User_id):
 
 def Fetch_One(field, query):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	parameter = (field,)
@@ -878,7 +819,6 @@ def Get_User_ID(request, User_Login):
 
 def Get_Subscribed_Device(request, User_id='NULL'):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	if User_id == 'NULL':
@@ -906,7 +846,6 @@ def Get_Subscribed_Device(request, User_id='NULL'):
 
 def Get_All_Unsubscribed_Device(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''SELECT * FROM TBL_Device
@@ -959,7 +898,6 @@ def Get_Unsubscribed_Device(request, User_id='NULL'):
 
 def Get_All_Device(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = 'SELECT Device_ID FROM tbl_device'
@@ -1002,7 +940,6 @@ def Get_Wearer(request, Device_ID='NULL'):
 
 def Get_Device_Vital(request, Device_ID='NULL'):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''SELECT Device_Temp, Device_HR, Device_O2
@@ -1032,7 +969,6 @@ def Get_Device_Vital(request, Device_ID='NULL'):
 
 def Get_Ack(request, Alert_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''SELECT * FROM TBL_Acknowledgement
@@ -1062,7 +998,6 @@ def Get_Ack(request, Alert_ID):
 
 def Post_Update_Values(field1, field2, query):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	if field1 == 'NULL' or field2 == 'NULL':
@@ -1084,7 +1019,6 @@ def Post_Add_Subscription(request):
 	Wearer_ID = data['Wearer_ID']
 
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''SELECT Device_ID FROM TBL_Device
@@ -1114,7 +1048,6 @@ def Post_Change_Password_Wearer(request):
 	Wearer_Pwd = data['Wearer_Pwd']
 
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''UPDATE tbl_wearer
@@ -1210,7 +1143,6 @@ def Post_Acknowledgement_Alert(request):
 	Alert_ID = data['Alert_ID']
 
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''INSERT INTO TBL_Acknowledgement
@@ -1238,7 +1170,6 @@ def Post_User_Login(request):
 	password = data.get('User_Pwd')
 
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''SELECT * FROM tbl_user
