@@ -9,7 +9,7 @@ import datetime as dt
 
 
 X = lambda s: os.system(s)
-# os.chdir('D:\\Scripts')
+os.chdir('C:/Users/hayysoft/Documents/BluguardScripts')
 # X('python Main_Program.py')
 
 # X('python Process_Device_Alerts.py')
@@ -54,61 +54,12 @@ X = lambda s: os.system(s)
 
 # X('python Process_Device_Alerts.py')
 
-# X('pyinstaller --onefile Send_Reminder_For_Survey_Completion.py')
-
-
-from multiprocessing import Process
-
-
-# if __name__ == '__main__':
-#     p1 = Process(target=Process_Device_Alerts)
-#     p1.start()
-#     p2 = Process(target=Send_Reminder_For_Survey_Completion)
-#     p2.start()
-#     p3 = Process(target=Update_Device_Reading.py)
-#     p3.start()
-#     p4 = Process(target=Process_Quarentine_Breach.py)
-#     p4.start()
-#     p1.join()
-#     p2.join()
-#     p3.join()
-#     p4.join()
+X('pyinstaller --onefile Main_Program.py')
 
 
 
-config = {
-    'host': 'bluguardprod1.mysql.database.azure.com',
-    'user': 'bluguardprod1@bluguardprod1',
-    'password': 'DoNotHack2021!',
-    'database': 'bluguarddb',
-    'client_flags': [mysql.ClientFlag.SSL],
-    'ssl_ca': '',
-}
-
-
-# Connector = mysql.connect(**config)
-
-# Cursor = Connector.cursor()
-# Cursor.execute('SELECT * FROM TBL_Wearer')
-# results = Cursor.fetchall()
-# print(results)
 
 
 
-def Check_Device_Tag(Device_Tag):
-    Connector = mysql.connect(**config)
-
-    Cursor = Connector.cursor()
-
-    query = '''SELECT COUNT(*) FROM TBL_Wearer
-                 WHERE Status = %s AND Wearer_ID = (
-                    SELECT Wearer_ID FROM TBL_Device
-                    WHERE Device_Tag = %s
-                 )'''
-    parameter = ('Unassigned', Device_Tag)
-    Cursor.execute(query, parameter)
-    results = Cursor.fetchall()
-    print(results)
 
 
-Check_Device_Tag('CR03-0002')

@@ -18,15 +18,16 @@ import os
 import json
 import mysql.connector as mysql
 
-
 config = {
-    'host': 'bluguardprod1.mysql.database.azure.com',
-    'user': 'bluguardprod1@bluguardprod1',
-    'password': 'DoNotHack2021!',
+    'host': 'bgplatformdb1.mysql.database.azure.com',
+    'user': 'bg37hayysoftadmin',
+    'password': 'DoNotHack2021',
     'database': 'bluguarddb',
-    'client_flags': [mysql.ClientFlag.SSL],
-    'ssl_ca': '',
+    # 'client_flags': [mysql.ClientFlag.SSL],
+    # 'ssl_ca': 'C:/Users/User/Desktop/backup/Employment/Hayysoft Systems/MYSQL Server/BaltimoreCyberTrustRoot.crt.pem',
+    'port': '3306'
 }
+
 
 def Create_Connector_To_DB():
 	Connector = mysql.connect(**config)
@@ -123,7 +124,9 @@ def Crest_CR03_Symptoms_Check_In(request):
 	})
 
 
-
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# @authentication_classes([JWTAuthentication])
 @require_http_methods(['POST'])
 @csrf_exempt
 def Crest_CR03_Check_Out_Patient(request):
@@ -326,9 +329,11 @@ def Check_Device_Tag(Device_Tag):
 	return 0
 
 
-
+# @api_view(['POST'])
 @require_http_methods(['POST'])
 @csrf_exempt
+# @permission_classes([IsAuthenticated])
+# @authentication_classes([JWTAuthentication])
 def Post_CR03_Registration(request):
 	data = json.loads(request.body)
 	Patient_Tag = data['Patient_Tag']

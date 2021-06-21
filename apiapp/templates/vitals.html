@@ -47,7 +47,7 @@
         }
         th, td {
             text-align: center;
-            font-size: 15px;
+            font-size: 12px;
         }
     </style>
 {% endblock %}
@@ -159,8 +159,9 @@
                         <th>Quality</th>
                         <th>Last Read Date</th>
                         <th>Last Read Time</th>
-                        <th>Serial No</th>
+                        <th>Device Tag</th>
                         <th>Device Mac</th>
+                        <th>Device Status</th>
                     </tr>
                 </thead>
                 <tbody class="tbody-data">
@@ -302,7 +303,6 @@
             for (let i = 0; i < latest_data.length; i++) {
                 let row = latest_data[i];
                 // console.log(row);
-                let time = TimeFormating(row.Device_Last_Updated_Time);
                 let tr = document.createElement('tr');
 
                 let deviceTemp = row.Device_Temp;
@@ -311,7 +311,7 @@
                 if (deviceTemp > 37) {
                     deviceTempTag.style.color = 'red';
                 } else if (deviceTemp < 33) {
-                    deviceTempTag.style.color = 'green';
+                    deviceTempTag.style.color = 'red';
                 } else {
                     deviceTempTag.style.color = 'blue';
                 }
@@ -319,10 +319,10 @@
                 let deviceO2 = row.Device_O2;
                 let deviceO2Tag = document.createElement('td');
                 deviceO2Tag.textContent = deviceO2;
-                if (deviceO2 > 78) {
+                if (deviceO2 > 100) {
                     deviceO2Tag.style.color = 'red';
-                } else if (deviceO2 < 70) {
-                    deviceO2Tag.style.color = 'green';
+                } else if (deviceO2 < 90) {
+                    deviceO2Tag.style.color = 'red';
                 } else {
                     deviceO2Tag.style.color = 'blue';
                 }
@@ -333,7 +333,7 @@
                 if (deviceBatLevel > 180) {
                     deviceBatLevelTag.style.color = 'red';
                 } else if (deviceBatLevel < 50) {
-                    deviceBatLevelTag.style.color = 'green';
+                    deviceBatLevelTag.style.color = 'red';
                 } else {
                     deviceBatLevelTag.style.color = 'blue';
                 }
@@ -347,7 +347,7 @@
                 } else if (deviceHR < 50) {
                     deviceHRTag.style.color = 'red';
                 } else {
-                    deviceHRTag.style.color = 'green';
+                    deviceHRTag.style.color = 'blue';
                 }
 
                 let deviceIncorrectDataFlag = row.Incorrect_Data_Flag;
@@ -383,9 +383,13 @@
                 let deviceMacTag = document.createElement('td');
                 deviceMacTag.textContent = deviceMac;
 
-                let Device_Serial_No = row.Device_Serial_No;
-                let Device_Serial_NoTag = document.createElement('td');
-                Device_Serial_NoTag.textContent = Device_Serial_No;
+                let device_Tag = row.Device_Tag;
+                let device_TagTag = document.createElement('td');
+                device_TagTag.textContent = device_Tag;
+
+                let status = row.Status;
+                let statusTag = document.createElement('td');
+                statusTag.textContent = status;
 
                 tr.appendChild(deviceStatusTag);
                 tr.appendChild(deviceTempTag);
@@ -395,8 +399,9 @@
                 tr.appendChild(deviceIncorrectDataFlagTag);
                 tr.appendChild(deviceLastUpdateDateTag);
                 tr.appendChild(deviceLastUpdateTimeTag);
-                tr.appendChild(Device_Serial_NoTag);
+                tr.appendChild(device_TagTag);
                 tr.appendChild(deviceMacTag);
+                tr.appendChild(statusTag);
 
                 tbody.appendChild(tr);
             }

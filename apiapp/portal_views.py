@@ -5,6 +5,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import (
 	authenticate, login, logout
 )
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import (
+	BaseAuthentication, SessionAuthentication
+)
+from rest_framework.decorators import (
+	api_view, permission_classes,
+	authentication_classes
+)
 from django.utils.safestring import mark_safe
 from django.http import JsonResponse
 
@@ -22,26 +31,31 @@ from .forms import (
 	SubscriptionCreateForm,
 	UserLoginForm, UserUpdateForm
 )
-from .models import (
-	TblDevice
-)
+# from .models import (
+# 	TblDevice
+# )
 
 
 
 config = {
-    'host': 'bluguardprod1.mysql.database.azure.com',
-    'user': 'bluguardprod1@bluguardprod1',
-    'password': 'DoNotHack2021!',
+    'host': 'bgplatformdb1.mysql.database.azure.com',
+    'user': 'bg37hayysoftadmin',
+    'password': 'DoNotHack2021',
     'database': 'bluguarddb',
-    'client_flags': [mysql.ClientFlag.SSL],
-    'ssl_ca': '',
+    # 'client_flags': [mysql.ClientFlag.SSL],
+    # 'ssl_ca': 'C',
+    'port': '3306'
 }
+
+def dictfetchall(cursor):
+	columns = [col[0] for col in cursor.description]
+	return [
+		dict(zip(columns, row)) for row in cursor.fetchall()
+	]
 
 
 Connector = mysql.connect(**config)
-
 Cursor = Connector.cursor()
-
 
 
 def Get_Latest_Alerts(request):
@@ -302,10 +316,26 @@ def Lastest_Device_Data(request):
 		 'Incorrect_Data_Flag': row[7],
 		 'Device_Status': row[8],
 		 'Device_Mac': row[9],
-		 'Device_Bat_Level': row[10],
-		 'Device_Serial_No': row[11]
+		 'Device_Bat_Level': row[10],\
+		 'Device_Tag': row[11]
 		 } for row in devices
 	]
+
+	for row in devices_data:
+		Wearer_ID = row['Wearer_ID']
+		query = '''
+			SELECT Status FROM TBL_Wearer
+			WHERE Wearer_ID = %s
+		'''
+		parameter = (Wearer_ID,)
+		Cursor.execute(query, parameter)
+		results = dictfetchall(Cursor)
+
+		try:
+			Status = results[0]['Status']
+			row['Status'] = Status
+		except LookupError:
+			pass
 
 	return JsonResponse({
 		'lastest': devices_data
@@ -567,7 +597,7 @@ def Device_View(request):
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
 
-	devices = TblDevice.objects.all()
+	# devices = TblDevice.objects.all()
 
 	return render(request,
 				  'portal/device/device.html',
@@ -577,7 +607,7 @@ def Device_View(request):
 				   	'latest_altert': data2,
 				   	'gateways': gateways,
 				   	'wearers': wearers,
-				   	'devices': devices
+				   	# 'devices': devices
 				   })
 
 

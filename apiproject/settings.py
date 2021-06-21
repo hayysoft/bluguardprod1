@@ -80,9 +80,9 @@ DATABASES = {
 
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'bluguarddb',
-        'USER': 'bluguardprod1@bluguardprod1',
-        'PASSWORD': 'DoNotHack2021!',
-        'HOST': 'bluguardprod1.mysql.database.azure.com',
+        'USER': 'bg37hayysoftadmin',
+        'PASSWORD': 'DoNotHack2021',
+        'HOST': 'bgplatformdb1.mysql.database.azure.com',
         'PORT': '3306',
         'client_flags': [mysql.ClientFlag.SSL],
         'OPTIONS': {'ssl': True},
