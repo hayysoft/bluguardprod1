@@ -14,7 +14,7 @@
         .vitals-header {
             margin: auto;
             width: 50%;
-            display: flex;
+            display: none;
             justify-content: center;
             align-items: center;
         }
@@ -63,11 +63,12 @@
             locations[i][1] = Number(locations[i][1]);
             locations[i][2] = Number(locations[i][2]);
         }
+        console.log(locations);
 
         function initMap() {
             var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 3,
-                center: new google.maps.LatLng(1.359100, 103.967320),
+                zoom: 7,
+                center: new google.maps.LatLng(12.974230724913145, 77.61558795330865),
                 mapTypeId: google.maps.MapTypeId.ROADMAP,
             });
 
@@ -79,7 +80,8 @@
                 marker = new google.maps.Marker({
                     position: new google.maps.LatLng(locations[i][1], locations[i][2]),
                     map: map,
-                    title: locations[i][0]
+                    title: locations[i][0],
+                    icon: locations[i][4]
                 });
 
                 google.maps.event.addListener(marker, 'click', (function(marker, i) {
@@ -213,7 +215,7 @@
         </div>
 
 
-        <div class="alerts-table alerts">
+        <!-- <div class="alerts-table alerts">
             <table class="table table-striped table-hover" id="device-table">
                 <thead>
                     <tr>
@@ -236,7 +238,7 @@
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
+        </div> -->
     </div>
 {% endblock %}
 
@@ -255,21 +257,21 @@
             });
         }
 
-        var gateway_select = $('.gateway-select');
-        var gateways_table = $('.gateways-table');
+        // var gateway_select = $('.gateway-select');
+        // var gateways_table = $('.gateways-table');
 
         // var gateway_select = document.querySelector('.gateway-select');
         // var gateway_select = document.querySelector('.gateways-table');
 
-        var device_select = $('.device-select');
-        var devices_table = $('.devices-table');
+        // var device_select = $('.device-select');
+        // var devices_table = $('.devices-table');
 
-        var alert_select = $('.alert-select');
-        var alerts_table = $('.alerts-table');
+        // var alert_select = $('.alert-select');
+        // var alerts_table = $('.alerts-table');
 
-        toggleClasseVisibility(gateway_select, gateways_table, 'gateways');
-        toggleClasseVisibility(device_select, devices_table, 'devices');
-        toggleClasseVisibility(alert_select, alerts_table, 'alerts');
+        // toggleClasseVisibility(gateway_select, gateways_table, 'gateways');
+        // toggleClasseVisibility(device_select, devices_table, 'devices');
+        // toggleClasseVisibility(alert_select, alerts_table, 'alerts');
 
 
 
@@ -289,20 +291,24 @@
                 .catch(err => console.log(err));
         }
 
+        fetchDevices();
         let setInterval2 = setInterval(fetchDevices, 1000);
 
         function TimeFormating(time) {
-            let t = time.replace("P0DT", "");
-            t = t.replace("H", ":");
-            t = t.replace("M", ":");
-            t = t.replace("S", "");
-            return t;
+            if (time === null) {
+                return '';
+            } else {
+                let t = time.replace("P0DT", "");
+                t = t.replace("H", ":");
+                t = t.replace("M", ":");
+                t = t.replace("S", "");
+                return t;
+            }
         }
 
         function ProcessLastestData(latest_data) {
             for (let i = 0; i < latest_data.length; i++) {
                 let row = latest_data[i];
-                // console.log(row);
                 let tr = document.createElement('tr');
 
                 let deviceTemp = row.Device_Temp;
@@ -344,7 +350,7 @@
 
                 if (deviceHR > 100) {
                     deviceHRTag.style.color = 'red';
-                } else if (deviceHR < 50) {
+                } else if (deviceHR < 60) {
                     deviceHRTag.style.color = 'red';
                 } else {
                     deviceHRTag.style.color = 'blue';
@@ -381,7 +387,17 @@
 
                 let deviceMac = row.Device_Mac;
                 let deviceMacTag = document.createElement('td');
-                deviceMacTag.textContent = deviceMac;
+
+                if (row.Is_Link === true) {
+                    let deviceMacLink = document.createElement('a');
+                    deviceMacLink.href = row.Device_Mac_Link;
+                    deviceMacLink.title = `${deviceMac} details`
+                    deviceMacLink.textContent = deviceMac;
+                    deviceMacLink.style.textDecoration = 'none';
+                    deviceMacTag.appendChild(deviceMacLink);
+                } else {
+                    deviceMacTag.textContent = deviceMac;
+                }
 
                 let device_Tag = row.Device_Tag;
                 let device_TagTag = document.createElement('td');

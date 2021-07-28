@@ -15,12 +15,15 @@ from rest_framework.decorators import (
 	authentication_classes
 )
 from django.utils.safestring import mark_safe
-from django.http import JsonResponse
+from django.http import (
+	JsonResponse, HttpResponse
+)
 
 import os
 import json
 import random
 import requests
+import mimetypes
 from datetime import datetime
 import mysql.connector as mysql
 
@@ -42,8 +45,6 @@ config = {
     'user': 'bg37hayysoftadmin',
     'password': 'DoNotHack2021',
     'database': 'bluguarddb',
-    # 'client_flags': [mysql.ClientFlag.SSL],
-    # 'ssl_ca': 'C',
     'port': '3306'
 }
 
@@ -56,6 +57,425 @@ def dictfetchall(cursor):
 
 Connector = mysql.connect(**config)
 Cursor = Connector.cursor()
+
+
+
+def patient_page(request):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	query = '''
+		SELECT * FROM TBL_Crest_Patient
+		WHERE Device_Tag IN (
+			SELECT Device_Tag FROM TBL_Device
+		) AND Q_Device_ID IN (
+			SELECT Device_ID FROM TBL_Device
+		)
+	'''
+	Cursor.execute(query)
+	results = dictfetchall(Cursor)
+
+	return render(request,
+				  'portal/patient/patient.html',
+				  {'patients': results})
+
+
+
+# def set_Q_Device_and_Q_Start(Device_ID, Patient_ID):
+# 	"""
+# 		Once user click on Start Then Update tbl patient
+# 		Q_Device field for the patient with the Device
+# 		ID of the quarantine band AND Q_Start
+# 		as CurrentDateTime
+# 	"""
+# 	Connector = mysql.connect(**config)
+# 	Cursor = Connector.cursor()
+
+# 	Device_ID = request.GET.get('Device_ID')
+# 	Patient_ID = request.GET.get('Patient_ID')
+
+# 	query = '''
+# 		(SELECT )
+# 	'''
+# 	pass
+
+
+def set_Q_Device_and_Q_Start(request):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	Device_ID = request.GET.get('Device_ID')
+	Wearer_ID = request.GET.get('Wearer_ID')
+	Patient_Tag = request.GET.get('Patient_Tag')
+	print(f'Device_ID = {Device_ID}')
+	print(f'Wearer_ID = {Wearer_ID}')
+	print(f'Patient_Tag = {Patient_Tag}')
+
+	# query = '''
+	# 	(SELECT Start_Quarantine(%s, %s))
+	# '''
+	query = '''
+		Update tbl_crest_patient
+		set Q_Device_ID = %s,
+			Q_Start = CURRENT_TIMESTAMP()
+		Where Patient_Tag = %s;
+	'''
+	if Patient_Tag != '0' or Patient_Tag != '':
+		try:
+			# print(Patient_Tag)
+			parameters = (Device_ID, int(Patient_Tag))
+			Cursor.execute(query, parameters)
+			Connector.commit()
+			# print('Updated')
+		except Exception:
+			pass
+	else:
+		# print(Patient_Tag)
+		pass
+
+	# query = '''
+	# 	UPDATE TBL_Crest_Patient
+	# 	SET Q_Device_ID = %s
+	# 	WHERE Wearer_ID = %s
+	# '''
+
+	# parameter = (Device_ID, Wearer_ID)
+	# Cursor.execute(query, parameter)
+	# Connector.commit()
+
+	# query = '''
+	# 	UPDATE TBL_Crest_Patient
+	# 	SET Q_Start = CURRENT_TIMESTAMP()
+	# 	WHERE Wearer_ID = %s
+	# '''
+
+	# parameter = (Wearer_ID,)
+	# Cursor.execute(query, parameter)
+	# Connector.commit()
+
+	return JsonResponse({
+		'Status': f'Q_Start was updated!'
+	})
+
+
+def set_Q_Device_and_Q_End(request):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	Device_ID = request.GET.get('Device_ID')
+	Wearer_ID = request.GET.get('Wearer_ID')
+	Patient_Tag = request.GET.get('Patient_Tag')
+	# print(f'Device_ID = {Device_ID}')
+	# print(f'Wearer_ID = {Wearer_ID}')
+	# print(f'Patient_Tag = {Patient_Tag}')
+
+	query = '''
+		Update tbl_crest_patient
+		set Q_End = CURRENT_TIMESTAMP()
+		Where Patient_Tag = %s;
+	'''
+	if Patient_Tag != '0' or Patient_Tag != '':
+		# print(Patient_Tag)
+		try:
+			parameters = (int(Patient_Tag),)
+			Cursor.execute(query, parameters)
+			Connector.commit()
+
+			query = '''
+				SELECT Q_Start FROM TBL_Crest_Patient
+				WHERE Wearer_ID = %s
+			'''
+			parameter = (Wearer_ID,)
+			Cursor.execute(query, parameter)
+			results = dictfetchall(Cursor)
+			print('Q_Start:', results)
+			print('>< ' * 15)
+			print(Wearer_ID)
+
+			if results != []:
+				Q_Start = results[0]['Q_Start']
+
+				query =  '''
+					UPDATE TBL_Breach
+					SET Breach_St_DateTime = %s,
+						Breach_End_DateTime = CURRENT_TIMESTAMP(),
+						Breach_Duration = TIMEDIFF(CURRENT_TIMESTAMP(),
+												   Breach_St_DateTime)
+					WHERE Wearer_ID = %s
+				'''
+				parameter = (Q_Start, Wearer_ID,)
+				Cursor.execute(query, parameter)
+				Connector.commit()
+			else:
+				query =  '''
+					UPDATE TBL_Breach
+					SET Breach_End_DateTime = CURRENT_TIMESTAMP(),
+						Breach_Duration = TIMEDIFF(CURRENT_TIMESTAMP(),
+												   Breach_St_DateTime)
+					WHERE Wearer_ID = %s
+				'''
+				parameter = (Wearer_ID,)
+				Cursor.execute(query, parameter)
+				Connector.commit()
+
+			print('Updated')
+		except Exception:
+			pass
+	else:
+		# print(Patient_Tag)
+		pass
+
+
+	# query = '''
+	# 	UPDATE TBL_Crest_Patient
+	# 	SET Q_Device_ID = %s
+	# 	WHERE Wearer_ID = %s
+	# '''
+
+	# parameter = (Device_ID, Wearer_ID)
+	# Cursor.execute(query, parameter)
+	# Connector.commit()
+
+	# query = '''
+	# 	UPDATE TBL_Crest_Patient
+	# 	SET Q_End = CURRENT_TIMESTAMP()
+	# 	WHERE Wearer_ID = %s
+	# '''
+
+	# parameter = (Wearer_ID,)
+	# Cursor.execute(query, parameter)
+	# Connector.commit()
+
+	return JsonResponse({
+		'Status': 'Q_End was updated!'
+	})
+
+
+
+def set_to_assigned_unassigned(request, wearer_id):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	query = '''
+		SELECT Status FROM TBL_Wearer
+		WHERE Wearer_ID = %s
+	'''
+	parameter = (wearer_id,)
+	Cursor.execute(query, parameter)
+	results = dictfetchall(Cursor)
+	Status = results[0]['Status']
+	Patient_Tag_Status = request.GET.get('Patient_Tag_Status')
+	print(f'Patient_Tag_Status = {Patient_Tag_Status}')
+
+	query = '''
+		UPDATE TBL_Wearer
+		SET Status = %s,
+			Patient_Tag_Status = %s
+		WHERE wearer_id = %s
+	'''
+	if results[0].get('Status') == 'Unassigned':
+		parameter = ('Assigned', Patient_Tag_Status, wearer_id)
+		assigned = True
+		Cursor.execute(query, parameter)
+		Connector.commit()
+	elif results[0].get('Status') == 'Assigned':
+		parameter = ('Unassigned', Patient_Tag_Status, wearer_id)
+		Cursor.execute(query, parameter)
+		Connector.commit()
+		assigned = False
+
+	return JsonResponse({
+		'Status': parameter,
+		'assigned': assigned
+	})
+
+
+
+def get_individual_files():
+	os.chdir('C:/Users/hayysoft/Documents/Scripts/interview/media')
+	from glob import glob
+	files = glob("*.json")
+	files = [file.split('.')[0] for file in files if len(file) == len(file) == 17]
+	return files
+
+def invidual_files(request):
+	files = get_individual_files()
+
+	return render(request,
+				  'portal/individual_devices/display_device.html',
+				  {'files': files})
+
+
+
+def device_json_display(request, file):
+	os.chdir('C:/Users/hayysoft/Documents/Scripts/interview/media')
+	files = get_individual_files()
+	file = [filename for filename in files if filename == file][0]
+	with open(f'{file}.json') as fp:
+		file_data = json.loads(fp.read())
+
+	for row in file_data:
+		try:
+			row['timestamp'] = row['date'] + ' ' + row['time'].split('.')[0]
+		except Exception:
+			pass
+
+	print(file_data[::-1][:2])
+	return render(request,
+				  'portal/individual_devices/indi_device.html',
+				  {'file_data': file_data[::-1],
+				   'files': files,
+				   'filename': file})
+
+
+
+def invidual_quarantine(request, wearer_id):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	query = '''
+		SELECT * FROM TBL_Breach
+		WHERE Wearer_ID = %s
+		ORDER BY Breach_St_DateTime DESC
+	'''
+	parameter = (wearer_id,)
+	Cursor.execute(query, parameter)
+	results = dictfetchall(Cursor)
+
+	return render(request,
+				  'portal/individual_quarentine/display_quarantine.html',
+				  {'wearer_id': wearer_id,
+				   'qb_data': results})
+
+
+
+def Online_Gateways_API(request):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	query = '''
+	SELECT Gateway_Status, Gateway_Location, Gateway_Mac, Gateway_Serial_No, Last_Updated_Time
+	FROM TBL_Gateway
+	'''
+	Cursor.execute(query)
+	results = dictfetchall(Cursor)
+
+	return JsonResponse({
+		'online_gateways': results
+	})
+
+
+@login_required
+def Online_Gateways(request):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	query = '''
+	SELECT Gateway_Location, Gateway_Mac, Gateway_Serial_No, Last_Updated_Time
+	FROM TBL_Gateway
+	'''
+	Cursor.execute(query)
+	results = dictfetchall(Cursor)
+
+	return render(request,
+				'portal/gateway/online_gateways.html',
+				{'online_gateways': results})
+
+
+def top_five_alerts_api(request):
+    Connector = mysql.connect(**config)
+    Cursor = Connector.cursor()
+
+    def format_time(time):
+    	date_, time_ = str(time).split('T')
+    	time_ = time_.split('.')
+    	datetime_ = date_ + ' ' + time_[0]
+    	return datetime_
+
+    query = '''
+        SELECT Alert_Datetime, Device_ID, Alert_Reading, Alert_Code
+        FROM tbl_alert ORDER BY Alert_Datetime DESC LIMIT 5;
+    '''
+    Cursor.execute(query)
+    results = Cursor.fetchall()
+
+    data = [
+        {
+            'Alert_Datetime': f'{row[0].date()} {row[0].time()}',
+            'Device_ID': row[1],
+            'Device_Temp': row[2],
+            'Alert_Code': row[3]
+        } for row in results
+    ]
+    for row in data:
+    	query = '''
+    		SELECT Alert_Description FROM TBL_Alert_Code
+    		WHERE Alert_Code = %s
+    	'''
+    	Alert_Code = row['Alert_Code']
+    	parameter = (Alert_Code,)
+    	Cursor.execute(query, parameter)
+    	results = dictfetchall(Cursor)
+    	row['Alert_Description'] = results[0]['Alert_Description']
+
+
+    	if row['Alert_Code'] == '1':
+    		row['vital_icon'] = 'Alert_Icons_Latest/temp_high_alert.png'
+    	elif row['Alert_Code'] == '2':
+    		row['vital_icon'] = 'Alert_Icons_Latest/temp_high_alert.png'
+    	elif row['Alert_Code'] == '3':
+    		row['vital_icon'] = 'Alert_Icons_Latest/High_O2.jpeg'
+    	elif row['Alert_Code'] == '4':
+    		row['vital_icon'] = 'Alert_Icons_Latest/High_O2.jpeg'
+    	elif row['Alert_Code'] == '5':
+    		row['vital_icon'] = 'Alert_Icons_Latest/High_HR.jpeg'
+    	elif row['Alert_Code'] == '6':
+    		row['vital_icon'] = 'Alert_Icons_Latest/High_HR.jpeg'
+    	elif row['Alert_Code'] == '7':
+    		row['vital_icon'] = 'Alert_Icons_Latest/BatLevel.jpeg'
+
+    	row['device_icon'] ='Alert_Icons_Latest/device_icon.png'
+
+    	Device_ID = row['Device_ID']
+    	query = '''
+    	SELECT Wearer_ID FROM tbl_device
+    	WHERE Device_ID = %s
+    	'''
+    	parameter = (Device_ID,)
+    	Cursor.execute(query, parameter)
+    	Fetch_Results = Cursor.fetchall()
+
+    	try:
+    		Wearer_ID = Fetch_Results[0][0]
+    		query = '''
+    			SELECT Wearer_Nick FROM tbl_wearer
+    			WHERE Wearer_ID = %s
+    		'''
+    		parameter = (Wearer_ID,)
+    		Cursor.execute(query, parameter)
+    		Fetch_Result = Cursor.fetchall()
+    		Wearer_Nick = Fetch_Result[0][0]
+    		row['Wearer_Nick'] = Wearer_Nick
+    	except LookupError:
+    		pass
+
+
+    return JsonResponse({
+    	'alerts': data
+    })
+
+
+
+def qrcode_page(request):
+	filepath = 'C:/Users/hayysoft/Documents/APIs/media/BG_Wearer_Crest_v3_2_4_1.apk'
+	filename = 'BG_Wearer_Crest_v3_2_4_1.apk'
+
+	path = open(filepath, "rb").read()
+	mime_type, _ = mimetypes.guess_type(filepath)
+	response = HttpResponse(path, content_type=mime_type)
+	response['Content-Disposition'] = f'attachment; filename={filename}'
+	return response
+
 
 
 def Get_Latest_Alerts(request):
@@ -177,7 +597,7 @@ def Fetch_Latest_Alerts():
 	return data
 
 
-
+@login_required
 def settings_page(request):
 	url = 'http://52.237.83.22:5050/alerts/'
 	response = requests.get(url)
@@ -305,21 +725,36 @@ def Lastest_Device_Data(request):
 	Cursor.execute(query)
 	devices = Cursor.fetchall()
 
-	devices_data = [
-		{'Device_ID': row[0],
-		 'Wearer_ID': row[1],
-		 'Device_Temp': row[2],
-		 'Device_HR': row[3],
-		 'Device_O2': row[4],
-		 'Device_Last_Updated_Date': row[5],
-		 'Device_Last_Updated_Time': row[6],
-		 'Incorrect_Data_Flag': row[7],
-		 'Device_Status': row[8],
-		 'Device_Mac': row[9],
-		 'Device_Bat_Level': row[10],\
-		 'Device_Tag': row[11]
-		 } for row in devices
-	]
+	devices_data = []
+	for row in devices:
+		files = get_individual_files()
+		try:
+			file = [filename for filename in files if filename == row[9]][0]
+			Device_Mac_Link = f'http://52.237.83.22:5050/device_json_display/{row[9]}/'
+			Is_Link = True
+		except IndexError:
+			file = None
+			Device_Mac_Link = '#'
+			Is_Link = False
+
+		default = lambda obj: obj.isoformat() if isinstance(obj, datetime) else obj
+		row_data = {
+			'Device_ID': row[0],
+			'Wearer_ID': row[1],
+			'Device_Temp': row[2],
+			'Device_HR': row[3],
+			'Device_O2': row[4],
+			'Device_Last_Updated_Date': row[5],
+			'Device_Last_Updated_Time': row[6],
+			'Incorrect_Data_Flag': row[7],
+			'Device_Status': row[8],
+			'Device_Mac': row[9],
+			'Device_Bat_Level': row[10],\
+			'Device_Tag': row[11],
+			'Device_Mac_Link': Device_Mac_Link,
+			'Is_Link': Is_Link
+		}
+		devices_data.append(row_data)
 
 	for row in devices_data:
 		Wearer_ID = row['Wearer_ID']
@@ -349,9 +784,9 @@ def vitals_page(request):
 
 	Cursor = Connector.cursor()
 
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data = response.json()['Alert'][:5]
+	# url = 'http://52.237.83.22:5050/alerts/'
+	# response = requests.get(url)
+	# data = response.json()['Alert'][:5]
 
 	query = 'SELECT Gateway_ID, Gateway_Location FROM tbl_gateway'
 	Cursor.execute(query)
@@ -382,7 +817,8 @@ def vitals_page(request):
 		 'Device_Status': row[8],
 		 'Device_Mac': row[9],
 		 'Device_Bat_Level': row[10],
-		 'Device_Serial_No': row[11]
+		 'Device_Serial_No': row[11],
+		 'Device_Mac_Link': f'http://52.237.83.22:5050/device_json_display/{row[9]}/'
 		 } for row in devices
 	]
 
@@ -407,11 +843,12 @@ def vitals_page(request):
 
 
 	return render(request, 'vitals.html',
-				  {'latest_altert': data,
-				   'gateways_': gateway_data,
-				   'wearers_': wearers,
-				   'devices_': devices_data,
-				   'alerts_': alerts_data,
+				  {
+				   # 'latest_altert': data,
+				   # 'gateways_': gateway_data,
+				   # 'wearers_': wearers,
+				   # 'devices_': devices_data,
+				   # 'alerts_': alerts_data,
 				   'value': 'value'})
 
 
@@ -422,7 +859,7 @@ def Quanrantine_Surveillance_Data(request):
 	query = '''
 		SELECT
 			Device_Status, Device_ID, Device_Last_Updated_Time,
-			Device_Last_Updated_Date, Wearer_ID
+			Device_Last_Updated_Date, Wearer_ID, Device_Tag
 		FROM
 			TBL_Device
 		WHERE
@@ -436,13 +873,61 @@ def Quanrantine_Surveillance_Data(request):
 			'Device_ID': row[1],
 			'Device_Last_Updated_Time': row[2],
 			'Device_Last_Updated_Date': row[3],
-			'Wearer_ID': row[4]
+			'Wearer_ID': row[4],
+			'Device_Tag': row[5]
 		} for row  in results
 	]
 
 	for row in range(len(data)):
 		Device_ID = data[row]['Device_ID']
 		Wearer_ID = data[row]['Wearer_ID']
+
+		query = '''
+			SELECT * FROM TBL_Crest_Patient
+			WHERE Patient_Discharged = %s AND Q_Device_ID = %s
+		'''
+		parameters = (0, 'NA')
+		Cursor.execute(query, parameters)
+		results = dictfetchall(Cursor)
+		data[row][f'Patient_Tag'] = results
+
+		query = '''
+			SELECT Patient_Tag FROM TBL_Crest_Patient
+			WHERE Q_Device_ID = %s AND
+				  Wearer_ID IN (
+				  	SELECT Wearer_ID FROM TBL_Wearer
+				  	WHERE Status = %s
+				)
+		'''
+		parameter = (Device_ID, 'Assigned')
+		Cursor.execute(query, parameter)
+		Patient_Tag_Row = dictfetchall(Cursor)
+		print(Patient_Tag_Row)
+		data[row]['Patient_Tag_Row'] = Patient_Tag_Row
+
+
+		data[row]['Breach_Link'] = f"http://52.237.83.22:5050/invidual_quarantine/{Wearer_ID}/"
+		data[row]['Assign_Unassign'] = f"http://52.237.83.22:5050/set_to_assigned_unassigned/{Wearer_ID}/"
+		data[row]['set_Q_Device_and_Q_End'] = f"http://52.237.83.22:5050/set_Q_Device_and_Q_End/?Device_ID={Device_ID}&Wearer_ID={Wearer_ID}&Patient_Tag={'Patient_Tag'}"
+		data[row]['set_Q_Device_and_Q_Start'] = f"http://52.237.83.22:5050/set_Q_Device_and_Q_Start/?Device_ID={Device_ID}&Wearer_ID={Wearer_ID}&Patient_Tag={'Patient_Tag'}"
+
+		query = '''
+			SELECT Status, Patient_Tag_Status FROM TBL_Wearer
+			WHERE Wearer_ID = %s
+		'''
+		parameter = (Wearer_ID,)
+		Cursor.execute(query, parameter)
+		results = dictfetchall(Cursor)
+		Status = results[0]['Status']
+		data[row]['Patient_Tag_Status'] = results[0]['Patient_Tag_Status']
+
+		if results[0].get('Status') == 'Unassigned':
+			data[row]['Assigned'] = False
+			data[row]['Background'] = 'green-bg'
+		elif results[0].get('Status') == 'Assigned':
+			data[row]['Assigned'] = True
+			data[row]['Background'] = 'red-bg'
+
 		query = '''
 			SELECT Wearer_Nick FROM tbl_wearer
 			WHERE Wearer_ID IN (
@@ -505,10 +990,7 @@ def Quanrantine_Surveillance_Data(request):
 @login_required
 def quanrentine_surveilance_page(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
-
-
 
 	return render(request, 'quanrentine_surveilance.html',
 				  {})
@@ -570,7 +1052,7 @@ def Get_All_Device_For_Portal(request):
 			'Device_Serial_No': row[2],
 			'Device_Mac': row[3],
 			'Device_Bat_Level': row[4],
-			'Device_Last_Updated_Date': row[5].strftime("%b %d"),
+			'Device_Last_Updated_Date': row[5], #.strftime("%b %d"),
 			'Wearer_ID': row[7],
 			'Device_Temp': row[8],
 			'Device_HR': row[9],

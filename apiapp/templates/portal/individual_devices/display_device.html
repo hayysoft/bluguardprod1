@@ -1,0 +1,73 @@
+{% extends "homepage.html" %}
+
+{% block title %}
+    <title>Gateway</title>
+{% endblock %}
+
+{% block style %}
+    <style>
+        .ind-device-main {
+            /*display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;*/
+            width: 100%;
+            margin: auto;
+            margin-top: 6px;
+        }
+        .main-div-device {
+            margin-right: 10px;
+            display: none;
+        }
+        .indi-device-display {
+            /*width: 85%;*/
+        }
+        .ind-device {
+            text-decoration: none;
+        }
+        #ind_device-table {
+            /*margin-top: 7px;*/
+        }
+        #ind_device-table tr th,
+        #ind_device-table tr td {
+            font-size: 12px;
+            text-align: center;
+        }
+        .device_mac_name {
+            text-align: center;
+            margin-top: 2px;
+            /*margin-bottom: 12px;*/
+        }
+        .back-to-vitals a {
+            margin-bottom: 5px;
+            text-decoration: none;
+        }
+    </style>
+{% endblock %}
+
+
+{% block content %}
+    <div class="ind-device-main">
+        <!-- <div class="main-div-device">
+            <table class="table table-striped table-hover" id="ind-devices">
+                <thead>
+                    <tr>
+                        <th>Gateway_ID</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in files %}
+                        <tr class="table-active">
+                            <td>
+                                <a class="ind-device" href="{% url 'apiapp:device_json_display' row %}">{{ row }}</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div> -->
+        <div class="indi-device-display">
+            {% block individual_devices %}
+            {% endblock %}
+        </div>
+    </div>
+{% endblock %}

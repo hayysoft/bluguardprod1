@@ -2,6 +2,18 @@ from django.urls import path
 
 from .portal_views import (
 	# Portal views
+	patient_page,
+
+	set_Q_Device_and_Q_Start,
+	set_Q_Device_and_Q_End,
+	set_to_assigned_unassigned,
+	invidual_quarantine,
+
+	invidual_files,
+	device_json_display,
+
+	top_five_alerts_api,
+	qrcode_page,
 	homepage,
 	communication,
 	messages,
@@ -24,6 +36,8 @@ from .portal_views import (
 	Wearer_Update,
 	Wearer_Delete,
 
+	Online_Gateways,
+	Online_Gateways_API,
 	Gateway_View,
 	Gateway_Create,
 	Gateway_Update,
@@ -56,6 +70,24 @@ app_name = 'apiapp'
 
 urlpatterns = [
 	# Portal views
+	path('patient_page/', patient_page, name='patient_page'),
+
+	path('set_Q_Device_and_Q_Start/', #<str:Device_ID>/<str:Wearer_ID>/',
+		 set_Q_Device_and_Q_Start,
+		 name='set_Q_Device_and_Q_Start'),
+	path('set_Q_Device_and_Q_End/', #<str:Device_ID>/<str:Wearer_ID>/',
+		 set_Q_Device_and_Q_End,
+		 name='set_Q_Device_and_Q_End'),
+	path('set_to_assigned_unassigned/<str:wearer_id>/', set_to_assigned_unassigned),
+	path('invidual_quarantine/<str:wearer_id>/', invidual_quarantine,
+		 name='invidual_quarantine'),
+
+	path('invidual_files/', invidual_files, name='invidual_files'),
+	path('device_json_display/<str:file>/', device_json_display,
+		 name='device_json_display'),
+
+	path('top_five_alerts_api/', top_five_alerts_api),
+	path('download-bg37/', qrcode_page, name='qrcode_page'),
 	path('', homepage, name='homepage'),
 	path('communication/', communication, name='communication'),
 	path('messages/', messages, name='messages'),
@@ -80,6 +112,8 @@ urlpatterns = [
 	path('wearer-delete/<str:Wearer_ID>/', Wearer_Delete, name='Wearer_Delete'),
 	path('wearers/', Get_All_Wearer_For_Portal),
 
+	path('online-gateways/', Online_Gateways, name='Online_Gateways'),
+	path('online-gateways-api/', Online_Gateways_API),
 	path('gateway/', Gateway_View, name='gateway'),
 	path('gateway-create/', Gateway_Create, name='Gateway_Create'),
 	path('gateway-update/<str:Gateway_ID>/', Gateway_Update, name='Gateway_Update'),

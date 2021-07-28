@@ -28,8 +28,8 @@ def top_five_alerts():
     Cursor = Connector.cursor()
 
     query = '''
-        SELECT Alert_Date, Alert_Time, Alert_Reading, Device_ID
-        FROM tbl_alert ORDER BY Alert_Time DESC LIMIT 6;
+        SELECT Alert_Date, Alert_Time, Device_ID, Alert_Reading, Alert_Code
+        FROM tbl_alert ORDER BY Alert_Time DESC LIMIT 5;
     '''
     Cursor.execute(query)
     results = Cursor.fetchall()
@@ -38,18 +38,15 @@ def top_five_alerts():
         {
             'Alert_Date': row[0],
             'Alert_Time': row[1],
-            'Device_Temp': row[2],
-            'Device_ID': row[3]
+            'Device_ID': row[2],
+            'Device_Temp': row[3],
+            'Alert_Code': row[4]
         } for row in results
     ]
 
 
-
-
-
-
     for index, row in enumerate(results):
-        Device_ID = row[3]
+        Device_ID = row[2]
         query = '''
             SELECT Wearer_ID FROM tbl_device
             WHERE Device_ID = %s
@@ -57,9 +54,6 @@ def top_five_alerts():
         parameter = (Device_ID,)
         Cursor.execute(query, parameter)
         Fetch_Results = Cursor.fetchall()
-
-        # Temp = Fetch_Results[0][0]
-        # data[index]['Device_Temp'] = Temp
 
         try:
             Wearer_ID = Fetch_Results[0][0]
@@ -88,19 +82,32 @@ def latitude_longitude(value):
 
     query = '''
         SELECT Gateway_Location, Gateway_Address,
-               Gateway_Latitude, Gateway_Longitude
+               Gateway_Latitude, Gateway_Longitude,
+               Gateway_Status
         FROM tbl_gateway;
     '''
     Cursor.execute(query)
     results = Cursor.fetchall()
 
-    gateway_lat_lng = [
-        [
-            row[0] + ' - ' + row[1],
-            row[2],
-            row[3],
-            random.randint(1, 6)
-        ] for row in results
-    ]
+    gateway_lat_lng = []
+
+    for row in results:
+        row_0_1 = row[0] + ' - ' + row[1]
+        row_2 = row[2]
+        row_3 = row[3]
+        row_4 = random.randint(1, 6)
+        row_icon = 'http://52.237.83.22:5050/static/Gateway_Icons/red-icon2-removebg.png' if row[4] == 'OFFLINE' else 'http://52.237.83.22:5050/static/Gateway_Icons/blue-icon2-removebg.png'
+        gateway_lat_lng.append([row_0_1, row_2, row_3, row_4, row_icon])
+
+
+    # gateway_lat_lng = [
+    #     [
+    #         row[0] + ' - ' + row[1],
+    #         row[2],
+    #         row[3],
+    #         random.randint(1, 6),
+
+    #     ] for row in results
+    # ]
 
     return mark_safe(json.dumps(gateway_lat_lng))

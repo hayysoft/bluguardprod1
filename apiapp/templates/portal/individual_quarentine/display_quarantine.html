@@ -1,0 +1,80 @@
+{% extends "homepage.html" %}
+
+{% block title %}
+    <title>Gateway</title>
+{% endblock %}
+
+{% block style %}
+    <style>
+        .ind-device-main {
+            /*display: flex;
+            justify-content: flex-start;
+            align-items: flex-start;*/
+            width: 100%;
+            margin: auto;
+            margin-top: 6px;
+        }
+        .main-div-device {
+            margin-right: 10px;
+            display: none;
+        }
+        .indi-device-display {
+            /*width: 85%;*/
+        }
+        .ind-device {
+            text-decoration: none;
+        }
+        #ind_device-table {
+            /*margin-top: 7px;*/
+        }
+        #ind_device-table tr th,
+        #ind_device-table tr td {
+            font-size: 12px;
+            text-align: center;
+        }
+        .device_mac_name {
+            text-align: center;
+            margin-top: 2px;
+        }
+        .back-to-vitals a {
+            margin-bottom: 5px;
+            text-decoration: none;
+        }
+    </style>
+{% endblock %}
+
+
+{% block content %}
+    <div class="ind-device-main">
+        <div class="indi-device-display">
+            <div class="device_mac_name">
+                <h4>{{ filename }}</h4>
+            </div>
+            <div class="back-to-vitals">
+                <a href="{% url 'apiapp:quanrentine_surveilance_page' %}">
+                    Back to Quarantine
+                </a>
+            </div>
+            <table class="table table-striped table-hover" id="ind_device-table">
+                <thead>
+                    <tr>
+                        <th>Breach ID</th>
+                        <th>Wearer ID</th>
+                        <th>Breach Start Datetime</th>
+                        <th>Breach End Datetime</th>
+                    </tr>
+                </thead>
+                <tbody class="gateway-body">
+                    {% for row in qb_data %}
+                        <tr class="table-active">
+                            <td>{{ row.Breach_ID }}</td>
+                            <td>{{ row.Wearer_ID }}</td>
+                            <td>{{ row.Breach_St_DateTime }}</td>
+                            <td>{{ row.Breach_End_DateTime }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

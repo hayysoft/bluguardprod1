@@ -16,9 +16,6 @@
             * {
                 box-sizing: border-box;
             }
-            body {
-                /*background-image: url("{% static 'HOME PAGE.jpg' %}")*/
-            }
             .base-div {
                 margin: auto;
                 width: 100%;
@@ -81,10 +78,6 @@
                 padding: 0px;
                 height: 35px;
             }
-            .list-header .second-li .first .first-row img {
-                width: 15px;
-                height: 25px;
-            }
             .list-header .second-li .first .third-row {
                 display: flex;
                 justify-content: center;
@@ -119,15 +112,9 @@
             .second-li .first .second-row .left-div {
                 border: 0px;
                 border: none;
-                /*width: 40%;*/
-            }
-            .second-li .first .second-row .left-div img {
-                width: 35px;
-                height: 35px;
             }
             .second-li .first .second-row .right-div {
                 margin: auto;
-                /*width: 90%;*/
                 border: none;
             }
             .second-li .first .second-row .right-div p {
@@ -204,25 +191,6 @@
                 height: 7%;
                 width: 100%;
                 border: 1px solid #C1BBBB;
-            }
-            #second-li {
-                overflow-y: scroll;
-            }
-            .list-header .second-li {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                width: 18%;
-                overflow-y: scroll;
-            }
-            .list-header .second-li div {
-                width: 100%;
-                height: 100%;
-                border: 1px solid #C1BBBB;
-            }
-            .list-header .second-li .first span {
-                font-size: 12px;
             }
             .list-header .first-li .second {
                 display: flex;
@@ -324,9 +292,101 @@
                 font-size: 10px;
             }
             #second-li #first {
+                display: flex;
+                flex-direction: column;
+                flex-wrap: wrap;
+                justify-content: center;
+                align-items: center;
                 background: #f2f2f2;
                 margin: 2px 0px;
                 border-radius: 4px;
+                min-width: 169px;
+
+                width: 100%;
+                height: 100%;
+                border: 1px solid #C1BBBB;
+            }
+            #image_icon {
+                max-width: 25px;
+                max-height: 35px;
+            }
+            #nickname_icon,
+            #alert_reading {
+                width: 35px;
+                height: 35px;
+            }
+            #left-div {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+            }
+            #left-div span span {
+                padding-left: 5px;
+                padding-right: 5px;
+            }
+            #second-li {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                width: 18%;
+                overflow-y: scroll;
+            }
+            @media screen and (max-width: 1151px) {
+                #second-li #first {
+                    display: flex;
+                    flex-direction: column;
+                    flex-wrap: wrap;
+                    justify-content: space-between;
+                    align-items: center;
+                }
+                #second-li #first #second-li-first {
+                    width: 100%;
+                }
+                #second-li #first #second-li-first-row {
+                    width: 100%;
+                }
+            }
+            #second-row {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                padding: 0;
+                margin: 0px;
+                margin-top: 5px;
+            }
+            #device-id {
+                font-size: 12px;
+            }
+            #online-gateway-link {
+                text-decoration: none;
+            }
+            #second-li #first {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+                padding: 5px;
+            }
+            #second-li #first #second-li-first {
+                width: 25%;
+                flex-direction: column;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            #second-li #first #second-li-first-row {
+                width: 70%;
+            }
+            #second-li #first #second-li-first #alert_reading {
+                width: 100%;
+                height: 100%;
+                max-height: 60px;
+                max-width: 60px;
+            }
+            #alert-reading-value {
+                font-size: 14px;
             }
         </style>
         {% block style %}
@@ -338,9 +398,9 @@
                 // Initialize and add the map
 
 
-                // let locations = '{{ value|latitude_longitude }}';
-                // locations = JSON.parse(locations);
-                locations = [];
+                let locations = '{{ value|latitude_longitude }}';
+                locations = JSON.parse(locations);
+                // locations = [];
                 for (let i = 0; i < locations.length; i++) {
                     locations[i][1] = Number(locations[i][1]);
                     locations[i][2] = Number(locations[i][2]);
@@ -348,8 +408,8 @@
 
                 function initMap() {
                     var map = new google.maps.Map(document.getElementById('map'), {
-                        zoom: 3,
-                        center: new google.maps.LatLng(1.359100, 103.967320),
+                        zoom: 7,
+                        center: new google.maps.LatLng(12.974230724913145, 77.61558795330865),
                         mapTypeId: google.maps.MapTypeId.ROADMAP,
                     });
 
@@ -361,7 +421,8 @@
                         marker = new google.maps.Marker({
                             position: new google.maps.LatLng(locations[i][1], locations[i][2]),
                             map: map,
-                            title: locations[i][0]
+                            title: locations[i][0],
+                            icon: locations[i][4]
                         });
 
                         google.maps.event.addListener(marker, 'click', (function(marker, i) {
@@ -431,6 +492,11 @@
                 <ul class="list-header second second-header">
                     <li class="li-user">
                         <span>Welcome, <strong>{{ request.user }}</strong></span>
+                        <span>
+                            <a id="online-gateway-link" href="{% url 'apiapp:Online_Gateways' %}">
+                                Online Gateways
+                            </a>
+                        </span>
                         <span class="date">Date: </span>
                         <span class="time">Time:</span>
                     </li>
@@ -478,7 +544,7 @@
                         </div>
                     </li>
                     <li class="second-li" id="second-li">
-                        {% top_five_alerts as top_alerts %}
+                        <!-- {% top_five_alerts as top_alerts %}
                         {% for wearer in top_alerts %}
                             <div class="first" id="first">
                                 <div class="first-row">
@@ -489,14 +555,34 @@
                                     <div class="left-div">
                                         <img src="{% static 'Alert_Icons_Latest/nickname_icon.png' %}" alt="">
                                         <span class="">
-                                            {% if wearer.Device_Temp < 33 %}
-                                                <img src="{% static 'Alert_Icons_Latest/temp_low_alert.png' %}" alt="">
-                                            {% elif wearer.Device_Temp >= 33 and wearer.Device_Temp <= 37 %}
-                                                <img src="{% static 'Alert_Icons_Latest/temp_normal_alert.png' %}" alt="">
-                                            {% else %}
+                                            {% ifequal wearer.Alert_Code '1' %}
                                                 <img src="{% static 'Alert_Icons_Latest/temp_high_alert.png' %}" alt="">
-                                            {% endif %}
-                                            {{ wearer.Device_Temp }}&#176;
+                                                {{ wearer.Device_Temp }}&#176;
+                                            {% endifequal %}
+                                            {% ifequal wearer.Alert_Code '2' %}
+                                                <img src="{% static 'Alert_Icons_Latest/temp_high_alert.png' %}" alt="">
+                                                {{ wearer.Device_Temp }}&#176;
+                                            {% endifequal %}
+                                            {% ifequal wearer.Alert_Code '3' %}
+                                                <img src="{% static 'Alert_Icons_Latest/High_O2.jpeg' %}" alt="">
+                                                {{ wearer.Device_Temp }}
+                                            {% endifequal %}
+                                            {% ifequal wearer.Alert_Code '4' %}
+                                                <img src="{% static 'Alert_Icons_Latest/High_O2.jpeg' %}" alt="">
+                                                {{ wearer.Device_Temp }}
+                                            {% endifequal %}
+                                            {% ifequal wearer.Alert_Code '5' %}
+                                                <img src="{% static 'Alert_Icons_Latest/High_HR.jpeg' %}" alt="">
+                                                {{ wearer.Device_Temp }}
+                                            {% endifequal %}
+                                            {% ifequal wearer.Alert_Code '6' %}
+                                                <img src="{% static 'Alert_Icons_Latest/High_HR.jpeg' %}" alt="">
+                                                {{ wearer.Device_Temp }}
+                                            {% endifequal %}
+                                            {% ifequal wearer.Alert_Code '7' %}
+                                                <img src="{% static 'Alert_Icons_Latest/BatLevel.jpeg' %}" alt="">
+                                                {{ wearer.Device_Temp }}
+                                            {% endifequal %}
                                         </span>
                                     </div>
                                     <div class="right-div">
@@ -513,7 +599,7 @@
                                     </div>
                                 </div>
                             </div>
-                        {% endfor %}
+                        {% endfor %} -->
                     </li>
                 </ul>
             </div>
@@ -546,8 +632,155 @@
                 time.textContent = 'Time: ' + formatDate(hours) + ':' + formatDate(mins) + ':' + formatDate(secs);
             }
             let setInterval1 = setInterval(setTimer, 1000);
-        </script>
 
+
+            function TimeFormating(time) {
+                let t = time.replace("P0DT", "");
+                t = t.replace("H", ":");
+                t = t.replace("M", ":");
+                t = t.replace("S", "");
+                return t;
+            }
+
+            let second_id = document.querySelector('#second-li');
+            function alertSection() {
+                second_id.innerHTML = '';
+                fetch('http://52.237.83.22:5050/top_five_alerts_api/')
+                    .then(res => res.json())
+                    .then(data => {
+                        alerts = data.alerts;
+
+                        for (let row of alerts) {
+                            let first = document.createElement('div');
+                            first.setAttribute('id', 'first');
+
+                            let second_li_first = document.createElement('div');
+                            second_li_first.setAttribute('id', 'second-li-first');
+
+                            let vital_icon = document.createElement('img');
+                            vital_icon.setAttribute('id', 'alert_reading');
+                            vital_icon.src = `{% static '${row.vital_icon}' %}`;
+
+                            let alert_reading = document.createElement('p');
+                            alert_reading.setAttribute('id', 'alert-reading-value');
+                            if (parseInt(row.Alert_Code) === 1 || parseInt(row.Alert_Code) === 2) {
+                                alert_reading.textContent = row.Device_Temp.slice(0, 5) + '℃'
+                            } else {
+                                alert_reading.textContent = row.Device_Temp.slice(0, 5);
+                            }
+
+                            second_li_first.appendChild(vital_icon);
+                            second_li_first.appendChild(alert_reading);
+
+                            let second_li_second_row = document.createElement('div');
+                            second_li_second_row.setAttribute('id', 'second-li-first-row');
+
+                            let wearer_nickname = document.createElement('span');
+                            wearer_nickname.textContent = row.Wearer_Nick;
+                            wearer_nickname.style.textDecoration = 'underline';
+                            wearer_nickname.appendChild(document.createElement('br'))
+
+                            let device_id = document.createElement('span');
+                            device_id.setAttribute('id', 'device-id');
+                            device_id.textContent = row.Device_ID;
+                            device_id.style.fontSize = '10px';
+                            device_id.appendChild(document.createElement('br'));
+
+                            let alertDescription = document.createElement('span');
+                            alertDescription.setAttribute('id', 'device-id');
+                            alertDescription.textContent = 'Alert Type: ' + row.Alert_Description;
+                            alertDescription.style.fontSize = '10px';
+                            alertDescription.appendChild(document.createElement('br'));
+
+                            let alert_datetime = document.createElement('span');
+                            alert_datetime.textContent = 'Date: ' + row.Alert_Datetime;
+                            alert_datetime.style.fontSize = '10px';
+
+                            second_li_second_row.appendChild(wearer_nickname);
+                            second_li_second_row.appendChild(device_id);
+                            second_li_second_row.appendChild(alertDescription);
+                            second_li_second_row.appendChild(alert_datetime);
+
+                            first.appendChild(second_li_first);
+                            first.appendChild(second_li_second_row);
+
+                            second_id.appendChild(first);
+
+
+
+                            // let device_icon = document.createElement('img');
+                            // device_icon.setAttribute('id', 'image_icon');
+                            // device_icon.src = `{% static '${row.device_icon}' %}`;
+                            // device_icon.src = "{% static 'Alert_Icons_Latest/device_icon.png' %}";
+
+                            // let device_id = document.createElement('span');
+                            // device_id.setAttribute('id', 'device-id');
+                            // device_id.textContent = row.Device_ID;
+
+                            // // first_row.appendChild(device_icon);
+                            // first_row.appendChild(device_id);
+
+                            // let second_row = document.createElement('div');
+                            // second_row.classList.add('second-row');
+                            // second_row.setAttribute('id', 'second-row');
+
+                            // let left_div = document.createElement('div');
+                            // left_div.classList.add('left-div');
+                            // left_div.setAttribute('id', 'left-div');
+
+                            // let nickname_icon = document.createElement('img');
+                            // nickname_icon.setAttribute('id', 'nickname_icon');
+                            // nickname_icon.src = "{% static 'Alert_Icons_Latest/nickname_icon.png' %}";
+
+                            // let alert_reading_span = document.createElement('span');
+                            // let vital_icon = document.createElement('img');
+                            // vital_icon.setAttribute('id', 'alert_reading');
+                            // vital_icon.src = `{% static '${row.vital_icon}' %}`;
+                            // let alert_reading = document.createElement('span');
+                            // alert_reading.textContent = row.Device_Temp;
+                            // alert_reading_span.appendChild(vital_icon);
+                            // alert_reading_span.appendChild(alert_reading);
+
+                            // let sep = document.createElement('span');
+                            // sep.textContent = ' ';
+                            // sep.style.marginRight = '5px;'
+
+                            // left_div.appendChild(nickname_icon);
+                            // left_div.appendChild(alert_reading_span);
+                            // left_div.appendChild(sep);
+
+                            // let right_div = document.createElement('div');
+                            // right_div.classList.add('second-div');
+
+                            // let wearer_nickname = document.createElement('span');
+                            // wearer_nickname.textContent = row.Wearer_Nick;
+                            // wearer_nickname.style.textDecoration = 'underline';
+
+                            // let br = document.createElement('br');
+
+                            // let third_row_right = document.createElement('span');
+                            // let date_time = document.createElement('span');
+                            // date_time.textContent = row.Alert_Datetime; // row.Alert_Date + 'T' + TimeFormating(row.Alert_Time);
+                            // date_time.setAttribute('id', 'date-time');
+
+                            // right_div.appendChild(wearer_nickname);
+                            // right_div.appendChild(br);
+                            // right_div.appendChild(date_time);
+
+                            // second_row.appendChild(left_div);
+                            // second_row.appendChild(right_div);
+
+                            // first.appendChild(first_row);
+                            // first.appendChild(second_row);
+                            // second_id.appendChild(first);
+                        }
+                    })
+                    .catch(err => console.log(err));
+            }
+
+            alertSection();
+            let setInterval3 = setInterval(alertSection, 15000);
+        </script>
 
 
         {% block javascript %}

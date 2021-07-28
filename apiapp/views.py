@@ -16,6 +16,9 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 import os
 import json
+import logging
+import datetime as dt
+from datetime import datetime
 import mysql.connector as mysql
 
 config = {
@@ -24,7 +27,7 @@ config = {
     'password': 'DoNotHack2021',
     'database': 'bluguarddb',
     # 'client_flags': [mysql.ClientFlag.SSL],
-    # 'ssl_ca': 'C:/Users/User/Desktop/backup/Employment/Hayysoft Systems/MYSQL Server/BaltimoreCyberTrustRoot.crt.pem',
+    # 'ssl_ca': 'C:/Users/User/Desktop/backup/Employment/Hayysoft Systems/MYSQL Server/DigiCertGlobalRootCA.crt.pem',
     'port': '3306'
 }
 
@@ -156,36 +159,50 @@ def Crest_CR03_Check_Out_Patient(request):
 	parameter = (Patient_Tag,)
 	Cursor.execute(query, parameter)
 	results = dictfetchall(Cursor)
-	Wearer_ID = results[0]['Wearer_ID']
-	Patient_ID = results[0]['Patient_ID']
+	try:
+		Wearer_ID = results[0]['Wearer_ID']
+		Patient_ID = results[0]['Patient_ID']
 
-	query = '''UPDATE TBL_Wearer
-				SET Status = %s
-				WHERE Wearer_ID = %s
-			'''
-	parameters = ('Unassigned', Wearer_ID)
-	Cursor.execute(query, parameters)
-	Connector.commit()
+		query = '''UPDATE TBL_Wearer
+					SET Status = %s
+					WHERE Wearer_ID = %s
+				'''
+		parameters = ('Unassigned', Wearer_ID)
+		Cursor.execute(query, parameters)
+		Connector.commit()
 
-	query = '''UPDATE TBL_Crest_Patient
-				SET Patient_Discharged = %s
-				WHERE Patient_ID = %s
-			'''
-	parameters = (1, Patient_ID)
-	Cursor.execute(query, parameters)
-	Connector.commit()
+		query = '''UPDATE TBL_Crest_Patient
+					SET Patient_Discharged = %s
+					WHERE Patient_ID = %s
+				'''
+		parameters = (1, Patient_ID)
+		Cursor.execute(query, parameters)
+		Connector.commit()
 
-	query = '''SELECT Device_Mac FROM TBL_Device
-				WHERE Wearer_ID = %s'''
-	parameter = (Wearer_ID,)
-	Cursor.execute(query, parameter)
-	results = dictfetchall(Cursor)
-	Device_Mac = results[0]['Device_Mac']
-	print(f'Device_Mac = {Device_Mac}')
+		query = '''SELECT Device_Mac FROM TBL_Device
+					WHERE Wearer_ID = %s'''
+		parameter = (Wearer_ID,)
+		Cursor.execute(query, parameter)
+		results = dictfetchall(Cursor)
+		Device_Mac = results[0]['Device_Mac']
+		print(f'Device_Mac = {Device_Mac}')
 
-	Process_Files_For_Discharded_Users(
-		Device_Mac, Patient_Tag
-	)
+		Process_Files_For_Discharded_Users(
+			Device_Mac, Patient_Tag
+		)
+	except (LookupError, IndexError):
+		pass
+
+	logger = logging.getLogger('Crest CR03 Check Out Patient')
+	logger.setLevel(logging.INFO)
+
+	file_handler = logging.FileHandler('C:/Users/hayysoft/Documents/LogFiles/Crest_CR03_Check_Out_Patient.log')
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	file_handler.setFormatter(formatter)
+	logger.addHandler(file_handler)
+	logger.info('\nProgram started!')
+	logger.info(f'Patient_Tag = {Patient_Tag}')
+	logger.info('\nProgram Finished!\n\n')
 
 	return JsonResponse({
 		'response': 'Successfull'
@@ -381,6 +398,19 @@ def Post_CR03_Registration(request):
 		Connector.commit()
 		results = 1
 
+	logger = logging.getLogger('Post CR03 Registration')
+	logger.setLevel(logging.INFO)
+
+	file_handler = logging.FileHandler('C:/Users/hayysoft/Documents/LogFiles/Post_CR03_Registration.log')
+	formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+	file_handler.setFormatter(formatter)
+	logger.addHandler(file_handler)
+	logger.info('\nProgram started!')
+	logger.info(f'Patient_Tag = {Patient_Tag}')
+	logger.info(f'Device_Tag = {Device_Tag}')
+	logger.info('Program Finished!\n\n')
+
+
 	return JsonResponse({
     	'results': results
     })
@@ -473,8 +503,8 @@ def Get_Wearer_Alert(request, Wearer_ID):
 	Cursor = Connector.cursor()
 
 	query = '''
-		SELECT Alert_ID, Alert_Code, Alert_Date,
-			   Alert_Time, Device_ID, Alert_Reading
+		SELECT Alert_ID, Alert_Code, Alert_Datetime,
+			   Device_ID, Alert_Reading
 		FROM TBL_Alert
 		WHERE Device_ID IN
 			(SELECT Device_ID FROM tbl_device
@@ -488,10 +518,10 @@ def Get_Wearer_Alert(request, Wearer_ID):
 		{
 			'Alert_ID': row[0],
 			'Alert_Code': row[1],
-			'Alert_Date': row[2],
-			'Alert_Time': row[3],
-			'Device_ID': row[4],
-			'Alert_Reading': row[5]
+			'Alert_Date': row[2].date(),
+			'Alert_Time': row[2].time(),
+			'Device_ID': row[3],
+			'Alert_Reading': row[4]
 		} for row in results
 	]
 
@@ -718,23 +748,32 @@ def Fetch_One_Or_Many(field, tablename, query):
 
 
 def Get_Alert(request, Wearer_ID='NULL'):
-	Cursor = Fetch_One_Or_Many(Wearer_ID, 'TBL_Alert',
-					 '''SELECT * FROM TBL_Alert
-						WHERE Device_ID IN
-						(SELECT Device_ID FROM tbl_device
-						WHERE Wearer_ID = %s)
-						ORDER BY Device_ID DESC LIMIT 5''')
+	# Cursor = Fetch_One_Or_Many(Wearer_ID, 'TBL_Alert',
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+	query = '''SELECT * FROM TBL_Alert
+				WHERE Device_ID IN
+				(SELECT Device_ID FROM tbl_device
+				WHERE Wearer_ID = %s)
+				ORDER BY Device_ID DESC LIMIT 5
+	'''
+	parameter = (Wearer_ID,)
+	Cursor.execute(query, parameter)
 
-	results = Cursor.fetchall()
-	data = [
-		{
-			'Alert_ID': row[0],
-			'Alert_Code': row[1],
-			'Alert_Date': row[2],
-			'Alert_Time': row[3],
-			'Device_ID': row[4]
-		} for row in results
-	]
+	try:
+		results = dictfetchall(Cursor)
+		data = [
+			{
+				'Alert_ID': row['Alert_ID'],
+				'Alert_Code': row['Alert_Code'],
+				'Alert_Date': row['Alert_Datetime'].date(),
+				'Alert_Time': row['Alert_Datetime'].time(),
+				'Device_ID': row['Device_ID'],
+				'Alert_Datetime': row['Alert_Datetime']
+			} for row in results
+		]
+	except Exception:
+		data = []
 
 	return JsonResponse({
 		'Alert': data

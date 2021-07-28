@@ -1,1 +1,0 @@
-curl -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjIxNTY3MzY4LCJqdGkiOiI1OTc1YzExZDExMDk0MjFlYmFkZmJiZjFjY2IxYzI3ZiIsInVzZXJfaWQiOjF9.d-0f6ix5OEvs1nYI5wSThnc8jrJb91jvFmkIu21AW28" http://52.237.83.22:5050/api/v1/Get_All_Users_Data/

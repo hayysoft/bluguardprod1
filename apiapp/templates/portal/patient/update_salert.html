@@ -1,0 +1,29 @@
+{% extends "homepage.html" %}
+
+{% block title %}
+    <title>Update Alert</title>
+{% endblock %}
+
+{% block style %}
+{% endblock %}
+
+
+{% block content %}
+    {% include "base.html" %}
+	<div class="row">
+		<a href="{% url 'apiapp:device' %}">Go back to devices</a>
+	</div>
+	<div class="card" id="create-device">
+		<div class="card-title">
+			<h4>Device id = {{ results }}</h4>
+			<hr>
+		</div>
+		<div class="card-body">
+			<form action="." method="POST">
+				{% csrf_token %}
+				{{ form }}
+				<input type="submit" value="Update Device" class="btn btn-primary mt-2">
+			</form>
+		</div>
+	</div>
+{% endblock %}

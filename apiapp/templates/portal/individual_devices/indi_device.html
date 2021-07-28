@@ -1,0 +1,42 @@
+{% extends "portal/individual_devices/display_device.html" %}
+
+{% block title %}
+    <title>{{ filename }}</title>
+{% endblock %}
+
+{% block individual_devices %}
+    <div class="device_mac_name">
+        <h4>{{ filename }}</h4>
+    </div>
+    <div class="back-to-vitals">
+        <a href="{% url 'apiapp:vitals_page' %}">
+            Back to vitals
+        </a>
+    </div>
+    <table class="table table-striped table-hover" id="ind_device-table">
+        <thead>
+            <tr>
+                <th>Temp</th>
+                <th>HR</th>
+                <th>O2</th>
+                <th>Bat Level</th>
+                <th>Time</th>
+                <th>Gateway</th>
+                <th>RSSI</th>
+            </tr>
+        </thead>
+        <tbody class="gateway-body">
+            {% for file in file_data %}
+                <tr class="table-active">
+                    <td>{{ file.temp }}</td>
+                    <td>{{ file.heart_rate }}</td>
+                    <td>{{ file.spo2 }}</td>
+                    <td>{{ file.batlevel }}</td>
+                    <td>{{ file.timestamp }}</td>
+                    <td>{{ file.gateway_mac }}</td>
+                    <td>{{ file.rssi }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

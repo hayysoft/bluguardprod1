@@ -1,0 +1,84 @@
+{% extends "homepage.html" %}
+
+{% block title %}
+    <title>Online Gateway</title>
+{% endblock %}
+
+
+{% block content %}
+    <div class="main-div-gateways">
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th>Gateway Status</th>
+                    <th>Gateway Location</th>
+                    <th>Gateway Mac</th>
+                    <th>Gateway Serial_No</th>
+                    <th>Last Transmitted Time</th>
+                </tr>
+            </thead>
+            <tbody class="gateway-body">
+                <!-- {% for row in online_gateways %}
+                    <tr class="table-active">
+                        <td>{{ row.Gateway_Status }}</td>
+                        <td>{{ row.Gateway_Location }}</td>
+                        <td>{{ row.Gateway_Mac }}</td>
+                        <td>{{ row.Gateway_Serial_No }}</td>
+                        <td>{{ row.Last_Updated_Time }}</td>
+                    </tr>
+                {% endfor %} -->
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
+
+
+{% block javascript %}
+    <script>
+        let tbody = document.querySelector('.gateway-body');
+        function onlineGateways() {
+            fetch('http://52.237.83.22:5050/online-gateways-api/')
+                .then(res => res.json())
+                .then(data => {
+                    tbody.innerHTML = '';
+                    let gateways = data.online_gateways;
+                    for (let row of gateways) {
+                        let tr = document.createElement('tr');
+
+                        let gatewayStatus = document.createElement('td');
+                        gatewayStatus.textContent = row.Gateway_Status;
+                        if (row.Gateway_Status === 'ONLINE') {
+                            gatewayStatus.style.color = 'green';
+                            gatewayStatus.style.fontWeight = 'bold';
+                        } else if (row.Gateway_Status === 'OFFLINE') {
+                            gatewayStatus.style.color = 'red';
+                            gatewayStatus.style.fontWeight = 'bold';
+                        }
+
+                        let gatewayLocation = document.createElement('td');
+                        gatewayLocation.textContent = row.Gateway_Location;
+
+                        let gatewayMac = document.createElement('td');
+                        gatewayMac.textContent = row.Gateway_Mac;
+
+                        let gatewaySerial = document.createElement('td');
+                        gatewaySerial.textContent = row.Gateway_Serial_No;
+
+                        let gatewayLastUpdated = document.createElement('td');
+                        gatewayLastUpdated.textContent = row.Last_Updated_Time;
+
+                        tr.appendChild(gatewayStatus);
+                        tr.appendChild(gatewayLocation);
+                        tr.appendChild(gatewayMac);
+                        tr.appendChild(gatewaySerial);
+                        tr.appendChild(gatewayLastUpdated);
+
+                        tbody.appendChild(tr);
+                    }
+                })
+        }
+
+        onlineGateways();
+        let setInterval4 = setInterval(onlineGateways, 5000);
+    </script>
+{% endblock %}

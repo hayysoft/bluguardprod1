@@ -1,0 +1,75 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+        <title>Login</title>
+        <style>
+            body {
+                background-image: url("{% static 'LOGIN PAGE BACKGROUND.jpg' %}");
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                background-size: cover;
+            }
+            #card-box {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                margin: auto;
+                width: 50%;
+                height: 450px;
+                max-width: 450px;
+                margin-top: 1%;
+                border-radius: 4px;
+            }
+            .logo {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                width: 50%;
+                margin: auto;
+            }
+            .logo img {
+                width: 50%;
+                height: auto;
+            }
+            .download-file button {
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                padding: 4px 6px;
+                background: lightgreen;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="" id="card-box">
+            <div class="logo">
+                <img src="{% static 'BLUGUARD  APP ICON (1).png' %}" alt="">
+            </div>
+
+            <div class="download-file">
+                <button id="btn-download">Download Bluguard37</button>
+            </div>
+
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+
+        <script>
+            function download(filename, textInput) {
+                var elem = document.createElement('a');
+                elem.setAttribute('href', 'data:text/plain;charset=utf-8, ' + encodeURIComponent(textInput));
+                elem.setAttribute('download', filename);
+                document.body.appendChild(elem);
+            }
+            document.querySelector('#btn-download')
+                .addEventListener('click', function() {
+
+                    download(filename, text);
+                })
+        </script>
+    </body>
+</html>

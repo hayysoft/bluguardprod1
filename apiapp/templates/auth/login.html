@@ -22,10 +22,7 @@
                 width: 50%;
                 height: 450px;
                 max-width: 450px;
-                margin-top: 8%;
-                /*border: 1px solid #ccc;*/
-                /*background: #152d49;*/
-                /*opacity: 0.7;*/
+                margin-top: 1%;
                 border-radius: 4px;
             }
             #id_username {
@@ -80,9 +77,24 @@
                 width: 50%;
                 height: auto;
             }
+            #qrcode {
+                display: flex;
+                justify-content: flex-end;
+                align-items: flex-end;
+                margin-top: 12px;
+                margin-right: 12px;
+            }
+            #qrcode img {
+                width: 150px;
+                height: 150px;
+            }
         </style>
     </head>
     <body>
+        <div id="qrcode">
+            <img src="{% static 'download_bg37.png' %}" alt="">
+        </div>
+
         <div class="" id="card-box">
             <div class="logo">
                 <img src="{% static 'BLUGUARD  APP ICON (1).png' %}" alt="">

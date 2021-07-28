@@ -12,12 +12,9 @@
             margin-right: 20px;
             margin-top: 10px;
         }
-        .devices {
-            display: none;
-        }
         .devices-table {
             width: 100%;
-            min-width: 1200px;
+            /*min-width: 1200px;*/
         }
         th, td {
             text-align: center;
@@ -27,6 +24,44 @@
             margin: auto;
             width: 100%;
         }
+        .assign-device {
+            border: 1px solid #ccc;
+            padding: 2px 10px;
+            border-radius: 2px;
+            /*background: #249e63;*/
+            color: white;
+        }
+        .assign-device:hover,
+        ..green-bg:hover {
+            /*background: #3acf98;*/
+            transition: background .3s;
+            color: black;
+        }
+        .red-bg {
+            background: red;
+            color: black;
+        }
+        .green-bg {
+            background: #249e63;
+            color: white;
+        }
+        #select-options {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        #disable-select {
+            background: #ccc;
+        }
+        #refresh-page {
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            padding: 3px 6px;
+            background: #3399ff;
+            transition: background .4s;
+        }
+        #refresh-page:hover {
+            background: #66b3ff;
+        }
     </style>
 {% endblock %}
 
@@ -34,18 +69,17 @@
 {% block content %}
     <div class="vitals-main" id="vitals-main">
         <div class="devices-table">
+            <button id="refresh-page">Refresh page</button>
             <table class="table table-striped table-hover" id="device-table">
                 <thead>
                     <tr>
                         <th>Status</th>
-                        <th>Wearer ID</th>
-                        <th>Nickname</th>
+                        <th>Device Tag</th>
                         <th>Last Updated Date</th>
                         <th>Last Updated Time</th>
-                        <th>Q Start</th>
-                        <th>Q End</th>
-                        <th>Time Left</th>
+                        <th>Patient Tag</th>
                         <th>Breach Records</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody class="tbody-data">
@@ -68,11 +102,12 @@
             locations[i][1] = Number(locations[i][1]);
             locations[i][2] = Number(locations[i][2]);
         }
+        console.log(locations);
 
         function initMap() {
             var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 3,
-                center: new google.maps.LatLng(1.359100, 103.967320),
+                zoom: 7,
+                center: new google.maps.LatLng(12.974230724913145, 77.61558795330865),
                 mapTypeId: google.maps.MapTypeId.ROADMAP,
             });
 
@@ -84,7 +119,8 @@
                 marker = new google.maps.Marker({
                     position: new google.maps.LatLng(locations[i][1], locations[i][2]),
                     map: map,
-                    title: locations[i][0]
+                    title: locations[i][0],
+                    icon: locations[i][4]
                 });
 
                 google.maps.event.addListener(marker, 'click', (function(marker, i) {
@@ -101,6 +137,12 @@
 
 {% block javascript %}
     <script>
+        let refresh_page = document.getElementById('refresh-page');
+        refresh_page.addEventListener('click', e => {
+            e.preventDefault();
+            fetchDevices();
+        })
+
         const checkToggle = (tag, class_) => {
             if (tag.hasClass(class_)) {
                 tag.toggle(class_)
@@ -113,13 +155,13 @@
             });
         }
 
-        var gateway_select = $('.gateway-select');
-        var gateways_table = $('.gateways-table');
+        // var gateway_select = $('.gateway-select');
+        // var gateways_table = $('.gateways-table');
 
-        var device_select = $('.device-select');
-        var devices_table = $('.devices-table');
+        // var device_select = $('.device-select');
+        // var devices_table = $('.devices-table');
 
-        toggleClasseVisibility(device_select, devices_table, 'devices');
+        // toggleClasseVisibility(device_select, devices_table, 'devices');
 
 
         let tbody = document.querySelector('.tbody-data');
@@ -131,18 +173,29 @@
                     tbody.innerHTML = '';
                     let latest_data = data;
                     ProcessLastestData(latest_data.surveillance);
+                    setTimeout(() => {
+                        detailButton('');
+                    }, 2050);
                 })
                 .catch(err => console.log(err));
         }
 
-        let setInterval2 = setInterval(fetchDevices, 2000);
+        fetchDevices();
+        setTimeout(() => {
+            detailButton('');
+        }, 100);
+        let setInterval2 = setInterval(fetchDevices, 15000);
 
         function TimeFormating(time) {
-            let t = time.replace("P0DT", "");
-            t = t.replace("H", ":");
-            t = t.replace("M", ":");
-            t = t.replace("S", "");
-            return t;
+            if (time !== null) {
+                let t = time.replace("P0DT", "");
+                t = t.replace("H", ":");
+                t = t.replace("M", ":");
+                t = t.replace("S", "");
+                return t;
+            } else {
+                return null;
+            }
         }
 
         function ProcessLastestData(latest_data) {
@@ -150,63 +203,244 @@
                 let row = latest_data[i];
                 let tr = document.createElement('tr');
 
-                let deviceStatus = row.Device_Status;
-                let deviceStatusTag = document.createElement('td');
-                deviceStatusTag.style.fontWeight = 'bold';
-
-                if (deviceStatus === 'OFFLINE') {
-                    deviceStatusTag.textContent = 'Breach';
-                    deviceStatusTag.style.color = 'red';
-                } else if (deviceStatus === 'ONLINE') {
-                    deviceStatusTag.textContent = 'Comply';
-                    deviceStatusTag.style.color = 'green';
-                }
-
-                let Nickname = row.Wearer_Nick;
-                let nicknameTag = document.createElement('td');
-                nicknameTag.textContent = Nickname;
-
-                let wearerID = row.Wearer_ID;
-                let wearerIDTag = document.createElement('td');
-                wearerIDTag.textContent = wearerID;
+                let deviceTg = row.Device_Tag;
+                let deviceTag = document.createElement('td');
+                deviceTag.textContent = deviceTg;
 
                 let deviceLastUpdateDate = row.Device_Last_Updated_Date;
                 let deviceLastUpdateDateTag = document.createElement('td');
                 deviceLastUpdateDateTag.textContent = deviceLastUpdateDate;
 
-                let deviceLastUpdateTime = row.Device_Last_Updated_Time;// TimeFormating(row.Device_Last_Updated_Time);
+                let deviceLastUpdateTime = TimeFormating(row.Device_Last_Updated_Time);
                 let deviceLastUpdateTimeTag = document.createElement('td');
                 deviceLastUpdateTimeTag.textContent = deviceLastUpdateTime;
 
-                let Quarantine_Start_Date = row.Quarantine_Start_Date;
-                let Quarantine_Start_DateTag = document.createElement('td');
-                Quarantine_Start_DateTag.textContent = Quarantine_Start_Date;
+                let patientTg = row.Time_Diff;
+                let patientTgTag = document.createElement('td');
+                patientTgTag.textContent = patientTg;
 
-                let Quarantine_End_Date = row.Quarantine_End_Date;
-                let Quarantine_End_DateTag = document.createElement('td');
-                Quarantine_End_DateTag.textContent = Quarantine_End_Date;
+                let selectPatientTag = document.createElement('select');
+                selectPatientTag.setAttribute('id', 'select-options');
+                selectPatientTag.classList.add(`select-options-${i}`);
 
-                let timeFiff = row.Time_Diff;
-                let timeFiffTag = document.createElement('td');
-                timeFiffTag.textContent = timeFiff;
+                let btnAssignTag = document.createElement('td');
+                btnAssignTag.classList.add(`assign-device-${i}`);
+                let btnAssign = document.createElement('button');
+                btnAssign.classList.add('assign-device');
+                btnAssign.classList.add(`assign-device-${i}-${i}`);
+                btnAssign.classList.add(row.Background);
+                $(`.assign-device-${i}`).toggleClass(`${row.Background}`);
+
+                let deviceStatus = row.Device_Status;
+                // console.log(row.Device_Status);
+                let deviceStatusTag = document.createElement('td');
+                deviceStatusTag.style.fontWeight = 'bold';
+
+                if (row.Assigned === true) {
+                    // console.log('Assigned');
+                    btnAssign.textContent = 'Stop';
+                    selectPatientTag.disabled = true;
+
+                    if (row.Patient_Tag_Status === 'Empty') {
+                        let option1 = document.createElement('option');
+                        option1.textContent = 0;
+                        option1.value = 0;
+                        selectPatientTag.appendChild(option1);
+                    } else {
+                        let option1 = document.createElement('option');
+                        for (let rowPatientTag of row.Patient_Tag_Row) {
+                            option1.textContent = rowPatientTag.Patient_Tag;
+                            option1.value = rowPatientTag.Patient_Tag;
+                            selectPatientTag.appendChild(option1);
+                        }
+                    }
+
+                    if (row.Patient_Tag_Row.length === 0) {
+                        // if (row.Patient)
+                        let option1 = document.createElement('option');
+                        option1.textContent = 0;
+                        option1.value = 0;
+                        selectPatientTag.appendChild(option1);
+
+                        for (let patientTagRow of row.Patient_Tag) {
+                            let option2 = document.createElement('option');
+                            option2.textContent = patientTagRow.Patient_Tag;
+                            option2.value = patientTagRow.Patient_Tag;
+                            selectPatientTag.appendChild(option2);
+                        }
+                    }
+
+                    if (deviceStatus === 'OFFLINE') {
+                        deviceStatusTag.textContent = 'Breach';
+                        deviceStatusTag.style.color = 'red';
+                    } else if (deviceStatus === 'ONLINE') {
+                        deviceStatusTag.textContent = 'Comply';
+                        deviceStatusTag.style.color = 'green';
+                    }
+                } else if (row.Assigned === false) {
+                    // console.log('Unassigned');
+                    btnAssign.textContent = 'Start';
+                    selectPatientTag.disabled = false;
+
+                    deviceStatusTag.textContent = 'Unassigned';
+                    deviceStatusTag.style.color = 'gray';
+
+                    deviceLastUpdateDateTag.textContent = '';
+                    deviceLastUpdateTimeTag.textContent = '';
+
+                    let option1 = document.createElement('option');
+                    option1.textContent = 0;
+                    option1.value = 0;
+                    selectPatientTag.appendChild(option1);
+
+                    for (let patientTagRow of row.Patient_Tag) {
+                        let option2 = document.createElement('option');
+                        option2.textContent = patientTagRow.Patient_Tag;
+                        option2.value = patientTagRow.Patient_Tag;
+                        selectPatientTag.appendChild(option2);
+                    }
+
+                }
+                patientTgTag.appendChild(selectPatientTag);
+
+                btnAssignTag.appendChild(btnAssign);
 
                 let alertID = row.Alert_ID;
                 let alertIDTag = document.createElement('td');
-                alertIDTag.textContent = alertID;
+                let details = document.createElement('a');
+                details.href = row.Breach_Link;
+                details.textContent = 'Details';
+                details.style.textDecoration = 'none';
+                alertIDTag.appendChild(details);
 
                 tr.appendChild(deviceStatusTag);
-                tr.appendChild(wearerIDTag);
-                tr.appendChild(nicknameTag);
+                tr.appendChild(deviceTag);
+                // tr.appendChild(nicknameTag);
                 tr.appendChild(deviceLastUpdateDateTag);
                 tr.appendChild(deviceLastUpdateTimeTag);
-                tr.appendChild(Quarantine_Start_DateTag);
-                tr.appendChild(Quarantine_End_DateTag);
-                tr.appendChild(timeFiffTag);
+                // tr.appendChild(Quarantine_Start_DateTag);
+                // tr.appendChild(Quarantine_End_DateTag);
+                tr.appendChild(patientTgTag);
                 tr.appendChild(alertIDTag);
+                tr.appendChild(btnAssignTag);
 
                 tbody.appendChild(tr);
             }
         }
+
+        function detailButton() {
+            fetch('http://52.237.83.22:5050/Quanrantine_Surveillance_Data/')
+                .then(res => res.json())
+                .then(data => {
+                    let latest_data = data.surveillance;
+                    for (let index = 0; index < latest_data.length; index++) {
+                        let btnId = `.assign-device-${index}-${index}`;
+                        let btnDetail = document.querySelector(`.assign-device-${index}`);
+
+                        let selectPatientTag = document.querySelector(`.select-options-${index}`);
+
+                        let Wearer_ID = latest_data[index].Wearer_ID;
+                        let Device_ID = latest_data[index].Device_ID;
+                        let Patient_Tag = '';
+                        btnDetail.addEventListener('click', e => {
+                            e.preventDefault();
+                            let btnValue = $(btnId);
+                            if (btnValue.text() === 'Start') {
+                                btnValue.removeClass('green-bg');
+                                btnValue.addClass('red-bg');
+                                btnDetail.textContent = 'Stop';
+                                Patient_Tag = selectPatientTag.value;
+                                // console.log(f'Patient_Tag);
+                                document.querySelector('#select-options').disabled = false;
+                                if (parseInt(Patient_Tag) === 0) {
+                                    // console.log('Start Patient_Tag =', Patient_Tag);
+                                    setAssignedUnassigned(parameter = 'Empty', Wearer_ID=Wearer_ID);
+                                } else {
+                                    // console.log('Start Patient_Tag =', Patient_Tag);
+                                    setAssignedUnassigned(parameter='NA', Wearer_ID=Wearer_ID);
+                                    set_Q_Device_and_Q_Start_End_Func2('set_Q_Device_and_Q_Start', Device_ID, Wearer_ID, Patient_Tag);
+                                }
+                            } else if (btnValue.text() === 'Stop') {
+                                btnValue.removeClass('red-bg');
+                                btnValue.addClass('green-bg');
+                                btnDetail.textContent = 'Start';
+                                Patient_Tag = selectPatientTag.value;
+                                // console.log('End Patient_Tag =', Patient_Tag)
+                                document.querySelector('#select-options').disabled = true;
+                                if (parseInt(Patient_Tag) === 0) {
+                                    setAssignedUnassigned(parameter='Empty', Wearer_ID=Wearer_ID);
+                                } else {
+                                    setAssignedUnassigned(parameter='NA', Wearer_ID=Wearer_ID);
+                                }
+                                set_Q_Device_and_Q_Start_End_Func2('set_Q_Device_and_Q_End', Device_ID, Wearer_ID, Patient_Tag);
+                            }
+
+                            setTimeout(() => {
+                                fetchDevices();
+                            }, 50);
+                        });
+                    }
+                })
+                .catch(err => console.log(err));
+        }
+
+
+        function setAssignedUnassigned(parameter, Wearer_ID='') {
+            let url = `http://52.237.83.22:5050/set_to_assigned_unassigned/${Wearer_ID}/?Patient_Tag_Status=${parameter}`;
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(err => console.log(err));
+        }
+
+        function set_Q_Device_and_Q_Start_End_Func(url, Device_ID, Wearer_ID) {
+            fetch(`http://52.237.83.22:5050/${url}/?Device_ID=${Device_ID}&Wearer_ID=${Wearer_ID}`)
+                .then(res => res.json())
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(err => console.log(err));
+        }
+
+        function set_Q_Device_and_Q_Start_End_Func2(url, Device_ID, Wearer_ID, Patient_Tag) {
+            fetch(`http://52.237.83.22:5050/${url}/?Device_ID=${Device_ID}&Wearer_ID=${Wearer_ID}&Patient_Tag=${Patient_Tag}`)
+                .then(res => res.json())
+                .then(data => {
+                    console.log(data);
+                })
+                .catch(err => console.log(err));
+        }
+
+
+        // let second_id = document.querySelector('#second-li');
+        function alertSection() {
+            fetch('http://52.237.83.22:5050/top_five_alerts_api/')
+                .then(res => res.json())
+                .then(data => {
+                    alerts = data.alerts;
+                    for (let row of alerts) {
+                        let first = document.querySelector('#first');
+
+                        let first_row = document.createElement('div');
+
+                        let device_icon = document.querySelector('img');
+                        device_icon.src = "{% static 'Alert_Icons_Latest/device_icon.png' %}"
+
+                        let  = document.createElement('span');
+                        device_id.textContent = row.Device_ID;
+
+                        first_row.appendChild(device_icon);
+                        first_row.appendChild(device_id);
+
+                        second_id.appendChild(first_row);
+                    }
+                })
+                .catch(err => console.log(err));
+        }
+
+        // alertSection();
     </script>
 {% endblock %}
 
