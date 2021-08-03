@@ -1,0 +1,67 @@
+{% extends "homepage.html" %}
+
+{% block title %}
+    <title>Create Device</title>
+{% endblock %}
+
+{% block style %}
+    <style>
+        .update-device {
+            margin-top: 50px;
+        }
+    </style>
+{% endblock %}
+
+
+{% block content %}
+    {% include "base.html" %}
+    <div class="update-device"></div>
+    <div class="row">
+        <a href="{% url 'apiapp:wearer' %}">Go back to wearers</a>
+    </div>
+    <div class="card" id="create-device">
+        <div class="card-title">
+            <h4>Confirm wearer to be created?</h4>
+            <hr>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <form method="post">
+                            <th>
+                                <div class="buttons">
+                                    <input type="submit" class="btn btn-sm btn-primary" name="" value="Confirm">
+                                    <a href="{% url 'apiapp:wearer' %}" class="btn btn-sm btn-danger">Cancel</a>
+                                </div>
+                            </th>
+                            <td>
+                                {% csrf_token %}
+                                {{ form }}
+                            </td>
+                        </form>
+                    </tr>
+                    <tr>
+                        <th>Wearer_Nick</th>
+                        <td>{{ Wearer_Nick }}</td>
+                    </tr>
+                    <tr>
+                        <th>Wearer_Pwd</th>
+                        <td>{{ Wearer_Pwd }}</td>
+                    </tr>
+                    <tr>
+                        <th>Status</th>
+                        <td>Unassigned</td>
+                    </tr>
+                    <tr>
+                        <th>Patient Tag Status</th>
+                        <td>NA</td>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

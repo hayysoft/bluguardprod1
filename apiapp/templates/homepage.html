@@ -408,7 +408,7 @@
 
                 function initMap() {
                     var map = new google.maps.Map(document.getElementById('map'), {
-                        zoom: 7,
+                        zoom: 2,
                         center: new google.maps.LatLng(12.974230724913145, 77.61558795330865),
                         mapTypeId: google.maps.MapTypeId.ROADMAP,
                     });
@@ -453,12 +453,12 @@
                             &nbsp;ADMIN
                         </a>
                     </li>
-                    <li class="communication">
+                    <!-- <li class="communication">
                         <a class="communication-title" href="{% url 'apiapp:communication' %}">
                             <img src="{% static 'PortalMenu/COMMUNICATION ICON.png' %}" alt="">
                             &nbsp;COMMUNICATION
                         </a>
-                    </li>
+                    </li> -->
                     <li class="vitals">
                         <a class="vitails-suerve" href="{% url 'apiapp:vitals_page' %}">
                             <img src="{% static 'PortalMenu/VITAL SURVEILANCE ICON.png' %}" alt="">

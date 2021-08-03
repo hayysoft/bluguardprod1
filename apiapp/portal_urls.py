@@ -25,17 +25,23 @@ from .portal_views import (
 	Gateway_Lat_Lng,
 
 
+	Device_Confirm,
+	Device_Confirm_Create,
 	Device_View,
 	Device_Create,
 	Device_Update,
 	Device_Delete,
 	Lastest_Device_Data,
 
+	Wearer_Confirm_Create,
+	Wearer_Confirm,
 	Wearer_View,
 	Wearer_Create,
 	Wearer_Update,
 	Wearer_Delete,
 
+	Gateway_Confirm_Create,
+	Gateway_Confirm,
 	Online_Gateways,
 	Online_Gateways_API,
 	Gateway_View,
@@ -105,12 +111,19 @@ urlpatterns = [
 	path('device-delete/<str:Device_ID>/', Device_Delete, name='Device_Delete'),
 	path('Lastest_Device_Data/', Lastest_Device_Data),
 	path('devices/', Get_All_Device_For_Portal),
+	path('device-confirm/<str:Device_Type>/<str:Device_Serial_No>/<str:Device_Mac>/', Device_Confirm, name='Device_Confirm'),
+	path('Device_Confirm_Create/<str:Device_Type>/<str:Device_Serial_No>/<str:Device_Mac>/<str:Wearer_ID>/',
+		 Device_Confirm_Create, name='Device_Confirm_Create'),
 
 	path('wearer/', Wearer_View, name='wearer'),
 	path('wearer-create/', Wearer_Create, name='Wearer_Create'),
-	path('wearer-update/<str:Wearer_ID>/', Wearer_Update, name='Wearer_Update'),
+	path('wearer-update/<str:Wearer_Nick>/', Wearer_Update, name='Wearer_Update'),
 	path('wearer-delete/<str:Wearer_ID>/', Wearer_Delete, name='Wearer_Delete'),
 	path('wearers/', Get_All_Wearer_For_Portal),
+	path('Wearer_Confirm/<str:Wearer_Nick>/<str:Wearer_Pwd>/', Wearer_Confirm,
+		 name='Wearer_Confirm'),
+	path('Wearer_Confirm_Create/<str:Wearer_Nick>/<str:Wearer_Pwd>/',
+		 Wearer_Confirm_Create, name='Wearer_Confirm_Create'),
 
 	path('online-gateways/', Online_Gateways, name='Online_Gateways'),
 	path('online-gateways-api/', Online_Gateways_API),
@@ -119,6 +132,10 @@ urlpatterns = [
 	path('gateway-update/<str:Gateway_ID>/', Gateway_Update, name='Gateway_Update'),
 	path('gateway-delete/<str:Gateway_ID>/', Gateway_Delete, name='Gateway_Delete'),
 	path('gateways/', Get_All_Gateway_For_Portal),
+	path('Gateway_Confirm_Create/<str:Gateway_Location>/<str:Gateway_Address>/<str:Gateway_Mac>/<str:Gateway_Serial_No>/<str:Gateway_Topic>/<str:Gateway_Latitude>/<str:Gateway_Longitude>/<str:Gateway_Type>/',
+		 Gateway_Confirm_Create, name='Gateway_Confirm_Create'),
+	path('Gateway_Confirm/<str:Gateway_Location>/<str:Gateway_Address>/<str:Gateway_Mac>/<str:Gateway_Serial_No>/<str:Gateway_Topic>/<str:Gateway_Latitude>/<str:Gateway_Longitude>/<str:Gateway_Type>/',
+		 Gateway_Confirm, name='Gateway_Confirm'),
 
 
 	path('message/', Message_View, name='message'),

@@ -32,7 +32,8 @@ from .forms import (
 	WearerCreateForm, WearerUpdateForm,
 	GatewayCreateForm, MessageCreateForm,
 	SubscriptionCreateForm,
-	UserLoginForm, UserUpdateForm
+	UserLoginForm, UserUpdateForm,
+	CreateWearerForDevice
 )
 # from .models import (
 # 	TblDevice
@@ -392,11 +393,25 @@ def top_five_alerts_api(request):
     	datetime_ = date_ + ' ' + time_[0]
     	return datetime_
 
-    query = '''
-        SELECT Alert_Datetime, Device_ID, Alert_Reading, Alert_Code
-        FROM tbl_alert ORDER BY Alert_Datetime DESC LIMIT 5;
-    '''
-    Cursor.execute(query)
+    if request.user.is_superuser:
+    	query = '''
+    	SELECT Alert_Datetime, Device_ID, Alert_Reading, Alert_Code
+    	FROM tbl_alert ORDER BY Alert_Datetime DESC LIMIT 5;
+    	'''
+    	Cursor.execute(query)
+    else:
+    	query = '''
+    	SELECT Alert_Datetime, Device_ID, Alert_Reading, Alert_Code
+    	FROM tbl_alert
+    	WHERE Device_ID IN (
+    	SELECT Device_ID FROM TBL_Device
+    	WHERE Username = %s
+    	)
+    	ORDER BY Alert_Datetime DESC LIMIT 5;
+    	'''
+    	parameter = (request.user.username, )
+    	Cursor.execute(query, parameter)
+
     results = Cursor.fetchall()
 
     data = [
@@ -657,7 +672,7 @@ def login_page(request):
 				return redirect('/login/')
 
 			login(request, user)
-			return redirect('/')
+			return redirect('/vitals/')
 	else:
 		form = UserLoginForm()
 
@@ -718,11 +733,56 @@ def Gateway_Lat_Lng(request):
 
 def Lastest_Device_Data(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
-	query = '''SELECT * FROM latest_table;'''
-	Cursor.execute(query)
+	if request.user.is_superuser:
+		# query = '''SELECT * FROM latest_table;'''
+		query = '''
+			SELECT
+		        Device_ID AS Device_ID,
+		        Wearer_ID AS Wearer_ID,
+		        Device_Temp AS Device_Temp,
+		        Device_HR AS Device_HR,
+		        Device_O2 AS Device_O2,
+		        Device_Last_Updated_Date AS Device_Last_Updated_Date,
+		        Device_Last_Updated_Time AS Device_Last_Updated_Time,
+		        Incorrect_Data_Flag AS Incorrect_Data_Flag,
+		        Device_Status AS Device_Status,
+		        Device_Mac AS Device_Mac,
+		        Device_Bat_Level AS Device_Bat_Level,
+		        Device_Tag AS Device_Tag
+		    FROM
+		    	TBL_Device
+		    WHERE
+		        Device_Type <> %s
+		'''
+		parameter = ('HSWB004', )
+		Cursor.execute(query, parameter)
+		# devices = Cursor.fetchall()
+	else:
+		query = '''
+			SELECT
+		        Device_ID AS Device_ID,
+		        Wearer_ID AS Wearer_ID,
+		        Device_Temp AS Device_Temp,
+		        Device_HR AS Device_HR,
+		        Device_O2 AS Device_O2,
+		        Device_Last_Updated_Date AS Device_Last_Updated_Date,
+		        Device_Last_Updated_Time AS Device_Last_Updated_Time,
+		        Incorrect_Data_Flag AS Incorrect_Data_Flag,
+		        Device_Status AS Device_Status,
+		        Device_Mac AS Device_Mac,
+		        Device_Bat_Level AS Device_Bat_Level,
+		        Device_Tag AS Device_Tag
+		    FROM
+		    	TBL_Device
+		    WHERE
+		        Device_Type <> %s AND
+		        Username = %s
+		'''
+		parameters = ('HSWB004', request.user.username)
+		Cursor.execute(query, parameters)
+
 	devices = Cursor.fetchall()
 
 	devices_data = []
@@ -755,6 +815,7 @@ def Lastest_Device_Data(request):
 			'Is_Link': Is_Link
 		}
 		devices_data.append(row_data)
+
 
 	for row in devices_data:
 		Wearer_ID = row['Wearer_ID']
@@ -840,13 +901,11 @@ def vitals_page(request):
 		 } for row in alerts
 	]
 
-
-
 	return render(request, 'vitals.html',
 				  {
 				   # 'latest_altert': data,
-				   # 'gateways_': gateway_data,
-				   # 'wearers_': wearers,
+				   'gateways_': gateway_data,
+				   'wearers_': wearers,
 				   # 'devices_': devices_data,
 				   # 'alerts_': alerts_data,
 				   'value': 'value'})
@@ -854,18 +913,34 @@ def vitals_page(request):
 
 def Quanrantine_Surveillance_Data(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
-	query = '''
+
+	if request.user.is_superuser:
+		query = '''
 		SELECT
 			Device_Status, Device_ID, Device_Last_Updated_Time,
 			Device_Last_Updated_Date, Wearer_ID, Device_Tag
 		FROM
 			TBL_Device
 		WHERE
-			Device_Type = 'HSWB004';
-	'''
-	Cursor.execute(query)
+			Device_Type = %s
+		'''
+		parameter = ('HSWB004', )
+		Cursor.execute(query, parameter)
+	else:
+		query = '''
+			SELECT
+				Device_Status, Device_ID, Device_Last_Updated_Time,
+				Device_Last_Updated_Date, Wearer_ID, Device_Tag
+			FROM
+				TBL_Device
+			WHERE
+				Device_Type = %s AND
+				Username = %s
+		'''
+		parameters = ('HSWB004', request.user.username)
+		Cursor.execute(query, parameters)
+
 	results = Cursor.fetchall()
 	data = [
 		{
@@ -1041,8 +1116,35 @@ def Get_All_Device_For_Portal(request):
 
 	Cursor = Connector.cursor()
 
-	query = 'SELECT * FROM tbl_device'
-	Cursor.execute(query)
+	# query = 'SELECT * FROM tbl_device'
+	if request.user.is_superuser:
+		query = '''SELECT * FROM latest_table;'''
+		Cursor.execute(query)
+		devices = Cursor.fetchall()
+	else:
+		query = '''
+			SELECT
+		        Device_ID AS Device_ID,
+		        Wearer_ID AS Wearer_ID,
+		        Device_Temp AS Device_Temp,
+		        Device_HR AS Device_HR,
+		        Device_O2 AS Device_O2,
+		        Device_Last_Updated_Date AS Device_Last_Updated_Date,
+		        Device_Last_Updated_Time AS Device_Last_Updated_Time,
+		        Incorrect_Data_Flag AS Incorrect_Data_Flag,
+		        Device_Status AS Device_Status,
+		        Device_Mac AS Device_Mac,
+		        Device_Bat_Level AS Device_Bat_Level,
+		        Device_Tag AS Device_Tag
+		    FROM
+		    	TBL_Device
+		    WHERE
+		        Device_Type <> %s AND
+		        Username = %s
+		'''
+		parameters = ('HSWB004', request.user.username)
+		Cursor.execute(query, parameters)
+	# Cursor.execute(query)
 
 	results = Cursor.fetchall()
 	data = [
@@ -1065,38 +1167,124 @@ def Get_All_Device_For_Portal(request):
 	})
 
 
-
 @login_required
 def Device_View(request):
-	url = 'http://52.237.83.22:5050/devices/'
-	response = requests.get(url)
-	data1 = response.json()['Device']
+	# url = 'http://52.237.83.22:5050/devices/'
+	# response = requests.get(url)
+	# data1 = response.json()['Device']
 
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
+	if request.user.is_superuser:
+		query = '''SELECT * FROM latest_table;'''
+		Cursor.execute(query)
+	else:
+		query = '''
+			SELECT
+		        Device_ID AS Device_ID,
+		        Wearer_ID AS Wearer_ID,
+		        Device_Type AS Device_Type,
+		        Device_Serial_No AS Device_Serial_No,
+		        Device_Temp AS Device_Temp,
+		        Device_HR AS Device_HR,
+		        Device_O2 AS Device_O2,
+		        Device_Last_Updated_Date AS Device_Last_Updated_Date,
+		        Device_Last_Updated_Time AS Device_Last_Updated_Time,
+		        Incorrect_Data_Flag AS Incorrect_Data_Flag,
+		        Device_Status AS Device_Status,
+		        Device_Mac AS Device_Mac,
+		        Device_Bat_Level AS Device_Bat_Level,
+		        Device_Tag AS Device_Tag
+		    FROM
+		    	TBL_Device
+		    WHERE
+		        Device_Type <> %s AND
+		        Username = %s
+		'''
+		parameters = ('HSWB004', request.user.username)
+		Cursor.execute(query, parameters)
+
+	results = dictfetchall(Cursor) # Cursor.fetchall()
+
+	data1 = [
+		{
+			'Device_ID': row['Device_ID'], #row[0],
+			'Device_Type': row['Device_Type'], # row[1],
+			'Device_Serial_No': row['Device_Serial_No'], # row[2],
+			'Device_Mac': row['Device_Mac'], # row[3],
+			'Device_Bat_Level': row['Device_Bat_Level'], # row[4],
+			'Device_Last_Updated_Date': row['Device_Last_Updated_Date'], # row[5], #.strftime("%b %d"),
+			'Wearer_ID': row['Wearer_ID'], # row[7],
+			'Device_Temp': row['Device_Temp'], # row[8],
+			'Device_HR': row['Device_HR'], # row[9],
+			'Device_O2': row['Device_O2'], #row[10]
+		} for row in results
+	]
+
+
+	# url = 'http://52.237.83.22:5050/alerts/'
+	# response = requests.get(url)
+	# data2 = response.json()['Alert'][:5]
 
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
 
-	# devices = TblDevice.objects.all()
 
 	return render(request,
 				  'portal/device/device.html',
 				  {
 				  	'note': 'Device Page',
 				   	'data': data1,
-				   	'latest_altert': data2,
+				   	# 'latest_altert': data2,
 				   	'gateways': gateways,
 				   	'wearers': wearers,
 				   	# 'devices': devices
 				   })
 
 
+def Device_Confirm(request, Device_Type, Device_Serial_No, Device_Mac):
+	Wearer_ID = None
+	if request.method == 'POST':
+		form = CreateWearerForDevice(request.POST)
+		if form.is_valid():
+			data = form.cleaned_data
+			Wearer_ID = data['Wearer_ID']
+			print(data)
+			return redirect(f'/Device_Confirm_Create/{Device_Type}/{Device_Serial_No}/{Device_Mac}/{Wearer_ID}/')
+	else:
+		form = CreateWearerForDevice()
+
+	return render(request,
+				  'portal/device/device_confirm.html',
+				  {'Device_Type': Device_Type,
+				   'Device_Serial_No': Device_Serial_No,
+				   'Device_Mac': Device_Mac,
+				   'Wearer_ID': Wearer_ID,
+				   'form': form})
+
+
+def Device_Confirm_Create(request, Device_Type, Device_Serial_No,
+						  Device_Mac, Wearer_ID):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	query = '''
+		INSERT INTO tbl_device (Device_ID, Device_Type,
+	   	Device_Serial_No, Device_Mac, Device_Last_Updated_Date,
+	   	Device_Last_Updated_Time, Wearer_ID, Username)
+	   	VALUES ((SELECT Create_PK("DVC")), %s, %s, %s,
+	   			 CURDATE(), CURTIME(), %s, %s)
+	'''
+	parameters = (Device_Type, Device_Serial_No,
+				  Device_Mac, Wearer_ID, request.user.username)
+	print(parameters)
+	Cursor.execute(query, parameters)
+	Connector.commit()
+	return redirect('/device/')
+
+
+
 @login_required
 def Device_Create(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	if request.method == 'POST':
@@ -1106,26 +1294,10 @@ def Device_Create(request):
 			Device_Type = data.get('Device_Type')
 			Device_Serial_No = data.get('Device_Serial_No')
 			Device_Mac = data.get('Device_Mac')
-			query = '''
-				INSERT INTO tbl_device (Device_ID, Device_Type,
-			   	Device_Serial_No, Device_Mac, Device_Bat_Level,
-			   	Device_Last_Updated_Date, Device_Last_Updated_Time,
-			   	Wearer_ID, Device_Temp, Device_HR, Device_O2,
-			   	Incoming_Id, Device_RSSI, Gateway_Mac,
-			   	Device_Status, Device_Tag)
-			   	VALUES ((SELECT Create_PK("DVC")), %s, %s, %s, NULL, CURDATE(),
-			   			 NULL, NULL,
-			   			 NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL)'''
-			parameters = (Device_Type, Device_Serial_No, Device_Mac)
-			Cursor.execute(query, parameters)
-			Connector.commit()
-			return redirect('/device/')
+			return redirect(f'/device-confirm/{Device_Type}/{Device_Serial_No}/{Device_Mac}/')
 	else:
 		form = DeviceCreateForm()
 
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
 
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
@@ -1135,87 +1307,101 @@ def Device_Create(request):
 	return render(request,
 				  'portal/device/create_device.html',
 				  {'form': form,
-				   'latest_altert': data2,
+				   # 'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
 @login_required
 def Device_Update(request, Device_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
-	query = '''SELECT Device_ID FROM tbl_device
+	query = '''SELECT * FROM tbl_device
 			   WHERE Device_ID = %s'''
 	parameter = (Device_ID,)
 	Cursor.execute(query, parameter)
-	results = Cursor.fetchone()
-	try:
-		Device_ID = results[0]
-	except TypeError:
-		notification_messages.warning(request, f'Device_ID = {Device_ID} does not exist.')
-		return redirect('/device/')
+	results = dictfetchall(Cursor)
+	device_data = results[0]
 
 	if request.method == 'POST':
 		form = DeviceUpdateForm(request.POST)
 		if form.is_valid():
 			data = form.cleaned_data
-			Device_Last_Updated_Date = data.get('Device_Last_Updated_Date')
-			Device_Last_Updated_Time = data.get('Device_Last_Updated_Time')
-			Device_Temp = data.get('Device_Temp')
-			Device_HR = data.get('Device_HR')
-			Device_O2 = data.get('Device_O2')
+			Device_Type = data['Device_Type']
+			Device_Serial_No = data['Device_Serial_No']
+			Device_Mac = data['Device_Mac']
+			Gateway_Mac = data['Gateway_Mac']
+			Device_Status = data['Device_Status']
+			Device_Tag = data['Device_Tag']
 
 			query = '''
 				UPDATE  tbl_device
-			   	SET Device_Last_Updated_Date = %s,
-			   		Device_Last_Updated_Time = %s,
-			   		Device_Temp = %s,
-			   		Device_HR = %s,
-			   		Device_O2 = %s
+			   	SET Device_Type = %s,
+			   		Device_Serial_No = %s,
+			   		Device_Mac = %s,
+			   		Gateway_Mac = %s,
+			   		Device_Status = %s,
+			   		Device_Tag = %s
 			   	WHERE Device_ID = %s'''
-			parameters = (Device_Last_Updated_Date, Device_Last_Updated_Time,
-						  Device_Temp, Device_HR, Device_O2, Device_ID)
+			parameters = (Device_Type, Device_Serial_No,
+						  Device_Mac, Gateway_Mac, Device_Status,
+						  Device_Tag, Device_ID)
 			Cursor.execute(query, parameters)
 			Connector.commit()
-			return redirect('/device/')
 	else:
-		form = DeviceUpdateForm()
+		form = DeviceUpdateForm(initial={
+			'Device_Type': device_data['Device_Type'],
+			'Device_Serial_No': device_data['Device_Serial_No'],
+			'Device_Mac': device_data['Device_Mac'],
+			'Gateway_Mac': device_data['Gateway_Mac'],
+			'Device_Status': device_data['Device_Status'],
+			'Device_Tag': device_data['Device_Tag']
+		})
 
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
 
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
-
-
 
 	return render(request,
 				  'portal/device/update_device.html',
 				  {'results': Device_ID,
 				   'form': form,
-				   'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
 
 def Device_Delete(request, Device_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
-	query = '''SELECT Device_ID FROM tbl_device
+	if request.user.is_superuser:
+		query = '''SELECT Device_ID FROM tbl_device
 			   WHERE Device_ID = %s'''
-	parameter = (Device_ID,)
-	Cursor.execute(query, parameter)
+		parameter = (Device_ID, )
+		Cursor.execute(query, parameter)
+	else:
+		query = '''SELECT Device_ID FROM tbl_device
+				   WHERE Device_ID = %s AND
+			        	 Username = %s'''
+		parameters = (Device_ID, request.user.username)
+		Cursor.execute(query, parameters)
+
 	results = Cursor.fetchone()
+
 	try:
 		Device_ID = results[0]
-		query = '''DELETE FROM tbl_device
+		if request.user.is_superuser:
+			query = '''DELETE FROM tbl_device
 				   WHERE Device_ID = %s'''
-		parameter = (Device_ID,)
-		Cursor.execute(query, parameter)
+			parameter = (Device_ID, )
+			Cursor.execute(query, parameter)
+		else:
+			query = '''DELETE FROM tbl_device
+					   WHERE Device_ID = %s AND
+			        	 Username = %s'''
+			parameters = (Device_ID, request.user.username)
+			Cursor.execute(query, parameters)
+
 		Connector.commit()
 		notification_messages.success(request, f'Device_ID = {Device_ID} was deleted successfully.')
 		return redirect('/device/')
@@ -1230,13 +1416,20 @@ def Device_Delete(request, Device_ID):
 
 def Get_All_Wearer_For_Portal(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
-	query = 'SELECT * FROM tbl_wearer'
-	Cursor.execute(query)
+	if request.user.is_superuser:
+		query = '''SELECT * FROM tbl_wearer;'''
+		Cursor.execute(query)
+	else:
+		query = '''SELECT * FROM tbl_wearer
+				   WHERE Username = %s
+		'''
+		parameter = (request.user.username,)
+		Cursor.execute(query, parameter)
 
 	results = Cursor.fetchall()
+
 	data = [
 		{
 			'Wearer_ID': row[0],
@@ -1251,53 +1444,84 @@ def Get_All_Wearer_For_Portal(request):
 
 @login_required
 def Wearer_View(request):
-	url = 'http://52.237.83.22:5050/wearers/'
-	response = requests.get(url)
-	data = response.json()['Wearer']
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
 
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
+	if request.user.is_superuser:
+		query = '''SELECT * FROM tbl_wearer;'''
+		Cursor.execute(query)
+	else:
+		query = '''SELECT * FROM tbl_wearer
+				   WHERE Username = %s
+		'''
+		parameter = (request.user.username,)
+		Cursor.execute(query, parameter)
+
+	results = Cursor.fetchall()
+
+	data = [
+		{
+			'Wearer_ID': row[0],
+			'Wearer_Nick': row[1]
+		} for row in results
+	]
 
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
-
-
-
 
 	return render(request,
 				  'portal/wearer/wearer.html',
 				  {'note': 'Device Page',
 				   'data': data,
-				   'latest_altert': data2,
+				   # 'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
+
+
+
+def Wearer_Confirm(request, Wearer_Nick, Wearer_Pwd):
+	if request.method == 'POST':
+		return redirect(f'/Wearer_Confirm_Create/{Wearer_Nick}/{Wearer_Pwd}/')
+
+	return render(request,
+				  'portal/wearer/wearer_confirm.html',
+				  {'Wearer_Nick': Wearer_Nick,
+				   'Wearer_Pwd': Wearer_Pwd})
+
+
+def Wearer_Confirm_Create(request, Wearer_Nick, Wearer_Pwd):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	query = '''
+		INSERT INTO tbl_wearer (Wearer_ID, Wearer_Nick,
+		Wearer_Pwd, Status, Patient_Tag_Status, Username)
+	   	VALUES ((SELECT Create_PK("WER")), %s, %s, %s, %s, %s)'''
+	parameters = (Wearer_Nick, Wearer_Pwd,
+				  'Unassigned', 'NA', request.user.username)
+	Cursor.execute(query, parameters)
+	Connector.commit()
+	return redirect('/wearer/')
+
+
 
 
 @login_required
 def Wearer_Create(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	if request.method == 'POST':
 		form = WearerCreateForm(request.POST)
 		if form.is_valid():
 			data = form.cleaned_data
+			print(data)
 			Wearer_Nick = data.get('Wearer_Nick')
-			query = '''
-				INSERT INTO tbl_wearer (Wearer_ID, Wearer_Nick)
-			   	VALUES ((SELECT Create_PK("WER")), %s)'''
-			parameters = (Wearer_Nick,)
-			Cursor.execute(query, parameters)
-			Connector.commit()
-			return redirect('/wearer/')
+			Wearer_Pwd = data.get('Wearer_Pwd')
+			return redirect(f'/Wearer_Confirm/{Wearer_Nick}/{Wearer_Pwd}/')
 	else:
 		form = WearerCreateForm()
 
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
 
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
@@ -1307,59 +1531,53 @@ def Wearer_Create(request):
 	return render(request,
 				  'portal/wearer/create_wearer.html',
 				  {'form': form,
-				   'latest_altert': data2,
+				   # 'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
 
 @login_required
-def Wearer_Update(request, Wearer_ID):
+def Wearer_Update(request, Wearer_Nick):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
-	query = '''SELECT Wearer_ID FROM tbl_wearer
-			   WHERE Wearer_ID = %s'''
-	parameter = (Wearer_ID,)
+	query = '''SELECT * FROM tbl_wearer
+			   WHERE Wearer_Nick = %s'''
+	parameter = (Wearer_Nick,)
 	Cursor.execute(query, parameter)
-	results = Cursor.fetchone()
-	try:
-		Wearer_ID = results[0]
-	except TypeError:
-		notification_messages.warning(request, f'Wearer_ID = {Wearer_ID} does not exist.')
-		return redirect('/wearer/')
+	results = dictfetchall(Cursor)
 
 	if request.method == 'POST':
 		form = WearerUpdateForm(request.POST)
 		if form.is_valid():
 			data = form.cleaned_data
 			Wearer_Nick = data.get('Wearer_Nick')
+			Wearer_Pwd = data.get('Wearer_Pwd')
+			Status = data.get('Status')
+			Patient_Tag_Status = data.get('Patient_Tag_Status')
 
 			query = '''
 				UPDATE  tbl_wearer
-			   	SET Wearer_Nick = %s
-			   	WHERE Wearer_ID = %s'''
-			parameters = (Wearer_Nick, Wearer_ID)
+			   	SET Wearer_Nick = %s,
+			   		Wearer_Pwd = %s,
+			   		Status = %s,
+			   		Patient_Tag_Status = %s
+			   	WHERE Wearer_Nick = %s'''
+			parameters = (Wearer_Nick, Wearer_Pwd, Status,
+						  Patient_Tag_Status, Wearer_Nick)
 			Cursor.execute(query, parameters)
 			Connector.commit()
-			return redirect('/wearer/')
 	else:
-		form = WearerUpdateForm()
-
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
+		form = WearerUpdateForm(initial=results[0])
 
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
 
-
-
 	return render(request,
 				  'portal/wearer/update_wearer.html',
-				  {'results': Wearer_ID,
+				  {
 				   'form': form,
-				   'latest_altert': data2,
+				   'Wearer_Nick': Wearer_Nick,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
@@ -1367,13 +1585,20 @@ def Wearer_Update(request, Wearer_ID):
 @login_required
 def Wearer_Delete(request, Wearer_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
-	query = '''SELECT Wearer_ID FROM tbl_wearer
-			   WHERE Wearer_ID = %s'''
-	parameter = (Wearer_ID,)
-	Cursor.execute(query, parameter)
+	if request.user.is_superuser:
+		query = '''SELECT Wearer_ID FROM tbl_wearer
+				   WHERE Wearer_ID = %s'''
+		parameter = (Wearer_ID,)
+		Cursor.execute(query, parameter)
+	else:
+		query = '''SELECT Wearer_ID FROM tbl_wearer
+			   WHERE Wearer_ID = %s AND
+			   		 Username = %s'''
+		parameters = (Wearer_ID, request.user.username)
+		Cursor.execute(query, parameters)
+
 	results = Cursor.fetchone()
 	try:
 		Wearer_ID = results[0]
@@ -1401,11 +1626,16 @@ def Wearer_Delete(request, Wearer_ID):
 
 def Get_All_Gateway_For_Portal(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
-	query = 'SELECT * FROM tbl_gateway'
-	Cursor.execute(query)
+	if request.user.is_superuser:
+		query = 'SELECT * FROM tbl_gateway'
+		Cursor.execute(query)
+	else:
+		query = '''SELECT * FROM tbl_gateway
+				   WHERE Username = %s'''
+		parameter = (request.user.username,)
+		Cursor.execute(query, parameter)
 
 	results = Cursor.fetchall()
 	data = [
@@ -1429,13 +1659,32 @@ def Get_All_Gateway_For_Portal(request):
 
 @login_required
 def Gateway_View(request):
-	url = 'http://52.237.83.22:5050/gateways/'
-	response = requests.get(url)
-	data = response.json()['Gateway']
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
 
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
+	if request.user.is_superuser:
+		query = 'SELECT * FROM tbl_gateway'
+		Cursor.execute(query)
+	else:
+		query = '''SELECT * FROM tbl_gateway
+				   WHERE Username = %s'''
+		parameter = (request.user.username,)
+		Cursor.execute(query, parameter)
+
+	results = Cursor.fetchall()
+	data = [
+		{
+			'Gateway_ID': row[0],
+			'Gateway_Location': row[1],
+			'Gateway_Address': row[2],
+			'Gateway_Mac': row[3],
+			'Gateway_Serial_No': row[4],
+			'Gateway_Topic': row[5],
+			'Gateway_Latitude': row[6],
+			'Gateway_Longitude': row[7],
+			'Gateway_Type': row[8],
+		} for row in results
+	]
 
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
@@ -1446,15 +1695,57 @@ def Gateway_View(request):
 				  'portal/gateway/gateway.html',
 				  {'note': 'Device Page',
 				   'data': data,
-				   'latest_altert': data2,
+				   # 'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
+
+
+def Gateway_Confirm(request, Gateway_Location, Gateway_Address, Gateway_Mac,
+					Gateway_Serial_No, Gateway_Topic, Gateway_Latitude,
+					Gateway_Longitude, Gateway_Type):
+
+	if request.method == 'POST':
+		return redirect(f'/Gateway_Confirm_Create/{Gateway_Location}/{Gateway_Address}/{Gateway_Mac}/{Gateway_Serial_No}/{Gateway_Topic}/{Gateway_Latitude}/{Gateway_Longitude}/{Gateway_Type}/')
+
+	return render(request,
+				  'portal/gateway/gateway_confirm.html',
+				  {'Gateway_Location': Gateway_Location,
+				   'Gateway_Address': Gateway_Address,
+				   'Gateway_Mac': Gateway_Mac,
+				   'Gateway_Serial_No': Gateway_Serial_No,
+				   'Gateway_Topic': Gateway_Topic,
+				   'Gateway_Latitude': Gateway_Latitude,
+				   'Gateway_Longitude': Gateway_Longitude,
+				   'Gateway_Type': Gateway_Type})
+
+
+def Gateway_Confirm_Create(request, Gateway_Location, Gateway_Address, Gateway_Mac,
+						   Gateway_Serial_No, Gateway_Topic, Gateway_Latitude,
+						   Gateway_Longitude, Gateway_Type):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	query = '''
+		INSERT INTO tbl_gateway
+		(Gateway_ID, Gateway_Location,
+	   	Gateway_Address, Gateway_Mac, Gateway_Serial_No,
+	   	Gateway_Topic, Gateway_Latitude, Gateway_Longitude,
+	   	Gateway_Type, Username)
+	   	VALUES ((SELECT Create_PK("GTE")), %s, %s, %s, %s,
+	   			 %s, %s, %s, %s, %s)'''
+	parameters = (Gateway_Location,
+	   			  Gateway_Address, Gateway_Mac, Gateway_Serial_No,
+	   			  Gateway_Topic, Gateway_Latitude, Gateway_Longitude,
+	   			  Gateway_Type, request.user.username)
+	Cursor.execute(query, parameters)
+	Connector.commit()
+	return redirect('/gateway/')
+
 
 
 @login_required
 def Gateway_Create(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	if request.method == 'POST':
@@ -1469,26 +1760,14 @@ def Gateway_Create(request):
 			Gateway_Latitude = data.get('Gateway_Latitude')
 			Gateway_Longitude = data.get('Gateway_Longitude')
 			Gateway_Type = data.get('Gateway_Type')
-			query = '''
-				INSERT INTO tbl_gateway
-				(Gateway_ID, Gateway_Location,
-			   	Gateway_Address, Gateway_Mac, Gateway_Serial_No,
-			   	Gateway_Topic, Gateway_Latitude, Gateway_Longitude,
-			   	Gateway_Type)
-			   	VALUES ((SELECT Create_PK("GTE")), %s, %s, %s, %s, %s, %s, %s, %s)'''
-			parameters = (Gateway_Location,
-			   			  Gateway_Address, Gateway_Mac, Gateway_Serial_No,
-			   			  Gateway_Topic, Gateway_Latitude, Gateway_Longitude,
-			   			  Gateway_Type)
-			Cursor.execute(query, parameters)
-			Connector.commit()
-			return redirect('/gateway/')
+			return redirect(f'/Gateway_Confirm/{Gateway_Location}/{Gateway_Address}/{Gateway_Mac}/{Gateway_Serial_No}/{Gateway_Topic}/{Gateway_Latitude}/{Gateway_Longitude}/{Gateway_Type}/')
 	else:
-		form = GatewayCreateForm()
-
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
+		form = GatewayCreateForm(initial={
+			'Gateway_Location': 'Malaysia', 'Gateway_Address': 'Malaysia',
+			'Gateway_Mac': 'Testing', 'Gateway_Serial_No':  '1234',
+			'Gateway_Topic': 'Testing', 'Gateway_Latitude': 12.3456,
+			'Gateway_Longitude': 6.8235, 'Gateway_Type': 'Testing'
+		})
 
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
@@ -1498,7 +1777,6 @@ def Gateway_Create(request):
 	return render(request,
 				  'portal/gateway/create_gateway.html',
 				  {'form': form,
-				   'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
@@ -1509,16 +1787,13 @@ def Gateway_Update(request, Gateway_ID):
 
 	Cursor = Connector.cursor()
 
-	query = '''SELECT Gateway_ID FROM tbl_gateway
+	query = '''SELECT * FROM tbl_gateway
 			   WHERE Gateway_ID = %s'''
 	parameter = (Gateway_ID,)
 	Cursor.execute(query, parameter)
-	results = Cursor.fetchone()
-	try:
-		Gateway_ID = results[0]
-	except TypeError:
-		notification_messages.warning(request, f'Gateway_ID = {Gateway_ID} does not exist.')
-		return redirect('/gateway/')
+	results = dictfetchall(Cursor)
+	gateway_data = results[0]
+	print(gateway_data)
 
 	if request.method == 'POST':
 		form = GatewayCreateForm(request.POST)
@@ -1529,6 +1804,9 @@ def Gateway_Update(request, Gateway_ID):
 			Gateway_Mac = data.get('Gateway_Mac')
 			Gateway_Serial_No = data.get('Gateway_Serial_No')
 			Gateway_Topic = data.get('Gateway_Topic')
+			Gateway_Latitude = data.get('Gateway_Latitude')
+			Gateway_Longitude = data.get('Gateway_Longitude')
+			Gateway_Type = data.get('Gateway_Type')
 
 			query = '''
 				UPDATE  tbl_gateway
@@ -1536,30 +1814,36 @@ def Gateway_Update(request, Gateway_ID):
 			   		Gateway_Address = %s,
 			   		Gateway_Mac = %s,
 			   		Gateway_Serial_No = %s,
-			   		Gateway_Topic = %s
+			   		Gateway_Topic = %s,
+			   		Gateway_Latitude = %s,
+			   		Gateway_Longitude = %s,
+			   		Gateway_Type = %s
 			   	WHERE Gateway_ID = %s'''
-			parameters = (Gateway_Location, Gateway_Address,
-						  Gateway_Mac, Gateway_Serial_No, Gateway_Topic, Gateway_ID)
+			parameters = (Gateway_Location,
+			   			  Gateway_Address, Gateway_Mac, Gateway_Serial_No,
+			   			  Gateway_Topic, Gateway_Latitude, Gateway_Longitude,
+			   			  Gateway_Type, Gateway_ID)
 			Cursor.execute(query, parameters)
 			Connector.commit()
-			return redirect('/gateway/')
 	else:
-		form = GatewayCreateForm()
-
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
+		form = GatewayCreateForm(initial={
+			'Gateway_Location': gateway_data['Gateway_Location'],
+		   	'Gateway_Address': gateway_data['Gateway_Address'],
+		   	'Gateway_Mac': gateway_data['Gateway_Mac'],
+		   	'Gateway_Serial_No': gateway_data['Gateway_Serial_No'],
+		   	'Gateway_Topic': gateway_data['Gateway_Topic'],
+		   	'Gateway_Latitude': gateway_data['Gateway_Latitude'],
+		   	'Gateway_Longitude': gateway_data['Gateway_Longitude'],
+		   	'Gateway_Type': gateway_data['Gateway_Type']
+		})
 
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
-
-
 
 	return render(request,
 				  'portal/gateway/update_gateway.html',
 				  {'results': Gateway_ID,
 				   'form': form,
-				   'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
@@ -1567,13 +1851,20 @@ def Gateway_Update(request, Gateway_ID):
 
 def Gateway_Delete(request, Gateway_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
-	query = '''SELECT Gateway_ID FROM tbl_gateway
-			   WHERE Gateway_ID = %s'''
-	parameter = (Gateway_ID,)
-	Cursor.execute(query, parameter)
+	if request.user.is_superuser:
+		query = '''SELECT Gateway_ID FROM tbl_gateway
+				   WHERE Gateway_ID = %s'''
+		parameter = (Gateway_ID,)
+		Cursor.execute(query, parameter)
+	else:
+		query = '''SELECT Gateway_ID FROM tbl_gateway
+				   WHERE Gateway_ID = %s AND
+				   		 Username = %s'''
+		parameters = (Gateway_ID, request.user.username)
+		Cursor.execute(query, parameters)
+
 	results = Cursor.fetchone()
 	try:
 		Gateway_ID = results[0]
