@@ -102,13 +102,37 @@
             locations[i][1] = Number(locations[i][1]);
             locations[i][2] = Number(locations[i][2]);
         }
-        console.log(locations);
+
+        let username = '{{ request.user }}';
+
+        function initialCoords(username) {
+            let lat;
+            let lng
+            for (let i = 0; i < locations.length; i++) {
+                if (username === 'singapore') {
+                    lat = 1.3717726;
+                    lng = 103.9409175;
+                }else if (username === locations[i][5]) {
+                    lat = locations[i][1];
+                    lng = locations[i][2];
+                } else if (username === 'hayysoft') {
+                    lat = 1.3717726;
+                    lng = 103.9409175;
+                }
+            }
+            return {lat, lng};
+        }
 
         function initMap() {
+            let coords = initialCoords(username);
+            let lat = coords['lat'];
+            let lng = coords['lng'];
+
             var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 2,
-                center: new google.maps.LatLng(12.974230724913145, 77.61558795330865),
-                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                zoom: 17,
+                center: new google.maps.LatLng(lat, lng),
+                // mapTypeId: google.maps.MapTypeId.ROADMAP,
+                mapTypeId: 'satellite'
             });
 
             var infowindow = new google.maps.InfoWindow();

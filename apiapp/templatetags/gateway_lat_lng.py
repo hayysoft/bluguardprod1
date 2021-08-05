@@ -21,6 +21,14 @@ config = {
     'port': '3306'
 }
 
+
+def dictfetchall(cursor):
+    columns = [col[0] for col in cursor.description]
+    return [
+        dict(zip(columns, row)) for row in cursor.fetchall()
+    ]
+
+
 @register.simple_tag(name='top_five_alerts')
 def top_five_alerts():
     Connector = mysql.connect(**config)
@@ -83,7 +91,7 @@ def latitude_longitude(value):
     query = '''
         SELECT Gateway_Location, Gateway_Address,
                Gateway_Latitude, Gateway_Longitude,
-               Gateway_Status
+               Gateway_Status, Username
         FROM tbl_gateway;
     '''
     Cursor.execute(query)
@@ -92,12 +100,41 @@ def latitude_longitude(value):
     gateway_lat_lng = []
 
     for row in results:
-        row_0_1 = row[0] + ' - ' + row[1]
+        username = row[5]
+        query = '''
+            SELECT COUNT(*) AS Offline_Devices FROM TBL_Device
+            WHERE Username IN (
+                SELECT Username FROM TBL_Gateway
+                WHERE Username = %s
+            ) AND
+            Device_Status = %s;
+        '''
+        parameters = (username, 'OFFLINE')
+        Cursor.execute(query, parameters)
+        offline_devices = dictfetchall(Cursor)
+        offline_devices = offline_devices[0]['Offline_Devices']
+
+
+        query = '''
+            SELECT COUNT(*) AS Online_Devices FROM TBL_Device
+            WHERE Username IN (
+                SELECT Username FROM TBL_Gateway
+                WHERE Username = %s
+            ) AND
+            Device_Status = %s;
+        '''
+        parameters = (username, 'ONLINE')
+        Cursor.execute(query, parameters)
+        online_devices = dictfetchall(Cursor)
+        online_devices = online_devices[0]['Online_Devices']
+
+
+        row_0_1 = row[0] + ' - ' + row[1] + f'.       OFFLINE-Devices: {offline_devices}         ONLINE-Devies: {online_devices}'
         row_2 = row[2]
         row_3 = row[3]
         row_4 = random.randint(1, 6)
         row_icon = 'http://52.237.83.22:5050/static/Gateway_Icons/red-icon2-removebg.png' if row[4] == 'OFFLINE' else 'http://52.237.83.22:5050/static/Gateway_Icons/blue-icon2-removebg.png'
-        gateway_lat_lng.append([row_0_1, row_2, row_3, row_4, row_icon])
+        gateway_lat_lng.append([row_0_1, row_2, row_3, row_4, row_icon, username])
 
 
     # gateway_lat_lng = [

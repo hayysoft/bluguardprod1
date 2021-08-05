@@ -321,7 +321,6 @@ def device_json_display(request, file):
 		except Exception:
 			pass
 
-	print(file_data[::-1][:2])
 	return render(request,
 				  'portal/individual_devices/indi_device.html',
 				  {'file_data': file_data[::-1],
@@ -413,6 +412,7 @@ def top_five_alerts_api(request):
     	Cursor.execute(query, parameter)
 
     results = Cursor.fetchall()
+    # print(results)
 
     data = [
         {
@@ -439,13 +439,13 @@ def top_five_alerts_api(request):
     	elif row['Alert_Code'] == '2':
     		row['vital_icon'] = 'Alert_Icons_Latest/temp_high_alert.png'
     	elif row['Alert_Code'] == '3':
-    		row['vital_icon'] = 'Alert_Icons_Latest/High_O2.jpeg'
+    		row['vital_icon'] = 'Alert_Icons_Latest/High_O2-removebg.png'
     	elif row['Alert_Code'] == '4':
-    		row['vital_icon'] = 'Alert_Icons_Latest/High_O2.jpeg'
+    		row['vital_icon'] = 'Alert_Icons_Latest/High_O2-removebg.png'
     	elif row['Alert_Code'] == '5':
-    		row['vital_icon'] = 'Alert_Icons_Latest/High_HR.jpeg'
+    		row['vital_icon'] = 'Alert_Icons_Latest/High_HR-removebg.png'
     	elif row['Alert_Code'] == '6':
-    		row['vital_icon'] = 'Alert_Icons_Latest/High_HR.jpeg'
+    		row['vital_icon'] = 'Alert_Icons_Latest/High_HR-removebg.png'
     	elif row['Alert_Code'] == '7':
     		row['vital_icon'] = 'Alert_Icons_Latest/BatLevel.jpeg'
 
@@ -473,7 +473,6 @@ def top_five_alerts_api(request):
     		row['Wearer_Nick'] = Wearer_Nick
     	except LookupError:
     		pass
-
 
     return JsonResponse({
     	'alerts': data
@@ -699,7 +698,7 @@ def homepage(request):
 				   'gateways': gateways,
 				   'wearers': wearers,
 				   'data_to_display': [], #data_to_display,
-				   'value': 'value'})
+				   'user': request.user})
 
 
 
@@ -842,12 +841,7 @@ def Lastest_Device_Data(request):
 @login_required
 def vitals_page(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
-
-	# url = 'http://52.237.83.22:5050/alerts/'
-	# response = requests.get(url)
-	# data = response.json()['Alert'][:5]
 
 	query = 'SELECT Gateway_ID, Gateway_Location FROM tbl_gateway'
 	Cursor.execute(query)
@@ -907,7 +901,7 @@ def vitals_page(request):
 				   'gateways_': gateway_data,
 				   'wearers_': wearers,
 				   # 'devices_': devices_data,
-				   # 'alerts_': alerts_data,
+				   'user': request.user,
 				   'value': 'value'})
 
 
@@ -1068,7 +1062,7 @@ def quanrentine_surveilance_page(request):
 	Cursor = Connector.cursor()
 
 	return render(request, 'quanrentine_surveilance.html',
-				  {})
+				  {'user': request.user})
 
 
 
@@ -1169,9 +1163,8 @@ def Get_All_Device_For_Portal(request):
 
 @login_required
 def Device_View(request):
-	# url = 'http://52.237.83.22:5050/devices/'
-	# response = requests.get(url)
-	# data1 = response.json()['Device']
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
 
 	if request.user.is_superuser:
 		query = '''SELECT * FROM latest_table;'''
@@ -1202,27 +1195,23 @@ def Device_View(request):
 		parameters = ('HSWB004', request.user.username)
 		Cursor.execute(query, parameters)
 
-	results = dictfetchall(Cursor) # Cursor.fetchall()
+	results = dictfetchall(Cursor)
 
 	data1 = [
 		{
-			'Device_ID': row['Device_ID'], #row[0],
-			'Device_Type': row['Device_Type'], # row[1],
-			'Device_Serial_No': row['Device_Serial_No'], # row[2],
-			'Device_Mac': row['Device_Mac'], # row[3],
-			'Device_Bat_Level': row['Device_Bat_Level'], # row[4],
-			'Device_Last_Updated_Date': row['Device_Last_Updated_Date'], # row[5], #.strftime("%b %d"),
-			'Wearer_ID': row['Wearer_ID'], # row[7],
-			'Device_Temp': row['Device_Temp'], # row[8],
-			'Device_HR': row['Device_HR'], # row[9],
-			'Device_O2': row['Device_O2'], #row[10]
+			'Device_ID': row['Device_ID'],
+			'Device_Type': row['Device_Type'],
+			'Device_Serial_No': row['Device_Serial_No'],
+			'Device_Mac': row['Device_Mac'],
+			'Device_Bat_Level': row['Device_Bat_Level'],
+			'Device_Last_Updated_Date': row['Device_Last_Updated_Date'],
+			'Wearer_ID': row['Wearer_ID'],
+			'Device_Temp': row['Device_Temp'],
+			'Device_HR': row['Device_HR'],
+			'Device_O2': row['Device_O2'],
 		} for row in results
 	]
 
-
-	# url = 'http://52.237.83.22:5050/alerts/'
-	# response = requests.get(url)
-	# data2 = response.json()['Alert'][:5]
 
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
@@ -1233,10 +1222,8 @@ def Device_View(request):
 				  {
 				  	'note': 'Device Page',
 				   	'data': data1,
-				   	# 'latest_altert': data2,
 				   	'gateways': gateways,
 				   	'wearers': wearers,
-				   	# 'devices': devices
 				   })
 
 
@@ -1247,7 +1234,6 @@ def Device_Confirm(request, Device_Type, Device_Serial_No, Device_Mac):
 		if form.is_valid():
 			data = form.cleaned_data
 			Wearer_ID = data['Wearer_ID']
-			print(data)
 			return redirect(f'/Device_Confirm_Create/{Device_Type}/{Device_Serial_No}/{Device_Mac}/{Wearer_ID}/')
 	else:
 		form = CreateWearerForDevice()
@@ -1275,7 +1261,6 @@ def Device_Confirm_Create(request, Device_Type, Device_Serial_No,
 	'''
 	parameters = (Device_Type, Device_Serial_No,
 				  Device_Mac, Wearer_ID, request.user.username)
-	print(parameters)
 	Cursor.execute(query, parameters)
 	Connector.commit()
 	return redirect('/device/')
@@ -1307,7 +1292,6 @@ def Device_Create(request):
 	return render(request,
 				  'portal/device/create_device.html',
 				  {'form': form,
-				   # 'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
@@ -1473,7 +1457,6 @@ def Wearer_View(request):
 				  'portal/wearer/wearer.html',
 				  {'note': 'Device Page',
 				   'data': data,
-				   # 'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
@@ -1531,7 +1514,6 @@ def Wearer_Create(request):
 	return render(request,
 				  'portal/wearer/create_wearer.html',
 				  {'form': form,
-				   # 'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
@@ -1784,7 +1766,6 @@ def Gateway_Create(request):
 @login_required
 def Gateway_Update(request, Gateway_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''SELECT * FROM tbl_gateway
@@ -1887,7 +1868,6 @@ def Gateway_Delete(request, Gateway_ID):
 
 def Get_All_Message_For_Portal(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = 'SELECT * FROM TBL_Message'
@@ -1916,10 +1896,6 @@ def Message_View(request):
 	response = requests.get(url)
 	data = response.json()['Message']
 
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
-
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
 
@@ -1929,7 +1905,6 @@ def Message_View(request):
 				  'portal/message/message.html',
 				  {'note': 'Message Page',
 				   'data': data,
-				   'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
@@ -1937,7 +1912,6 @@ def Message_View(request):
 @login_required
 def Message_Create(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	if request.method == 'POST':
@@ -1964,19 +1938,12 @@ def Message_Create(request):
 	else:
 		form = MessageCreateForm()
 
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
-
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
-
-
 
 	return render(request,
 				  'portal/message/create_message.html',
 				  {'form': form,
-				   'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
@@ -1984,7 +1951,6 @@ def Message_Create(request):
 @login_required
 def Message_Delete(request, Message_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''SELECT Message_ID FROM TBL_Message
@@ -2012,7 +1978,6 @@ def Message_Delete(request, Message_ID):
 
 def Get_All_Subscription_For_Portal(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = 'SELECT * FROM tbl_subscription'
@@ -2040,10 +2005,6 @@ def Subscription_View(request):
 	response = requests.get(url)
 	data = response.json()['Subscription']
 
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
-
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
 
@@ -2053,7 +2014,6 @@ def Subscription_View(request):
 				  'portal/subscription/subscription.html',
 				  {'note': 'Message Page',
 				   'data': data,
-				   'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
@@ -2061,7 +2021,6 @@ def Subscription_View(request):
 @login_required
 def Subscription_Create(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	if request.method == 'POST':
@@ -2087,10 +2046,6 @@ def Subscription_Create(request):
 	else:
 		form = SubscriptionCreateForm()
 
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
-
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
 
@@ -2099,7 +2054,6 @@ def Subscription_Create(request):
 	return render(request,
 				  'portal/subscription/create_subscription.html',
 				  {'form': form,
-				   'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
@@ -2107,7 +2061,6 @@ def Subscription_Create(request):
 
 def Subscription_Delete(request, Subscription_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''SELECT Subscription_ID FROM tbl_subscription
@@ -2135,7 +2088,6 @@ def Subscription_Delete(request, Subscription_ID):
 
 def Get_All_Alert_For_Portal(request):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = 'SELECT * FROM TBL_Alert;'
@@ -2159,10 +2111,6 @@ def Get_All_Alert_For_Portal(request):
 
 @login_required
 def Alert_View(request):
-	# url = 'http://52.237.83.22:5050/alerts/'
-	# response = requests.get(url)
-	# data = response.json()['Alert']
-
 	query = 'SELECT * FROM TBL_Alert;'
 	Cursor.execute(query)
 
@@ -2176,22 +2124,14 @@ def Alert_View(request):
 			'Device_ID': row[4]
 		} for row in results
 	]
-	print(data)
-
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data2 = response.json()['Alert'][:5]
 
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
-
-
 
 	return render(request,
 				  'portal/alert/alert.html',
 				  {'note': 'Alert Page',
 				   'data': data,
-				   'latest_altert': data2,
 				   'gateways': gateways,
 				   'wearers': wearers})
 
@@ -2199,7 +2139,6 @@ def Alert_View(request):
 
 def Alert_Delete(request, Alert_ID):
 	Connector = mysql.connect(**config)
-
 	Cursor = Connector.cursor()
 
 	query = '''SELECT Alert_ID FROM TBL_Alert
@@ -2225,14 +2164,8 @@ def Alert_Delete(request, Alert_ID):
 
 @login_required
 def Latest_Alerts_View(request):
-	url = 'http://52.237.83.22:5050/alerts/'
-	response = requests.get(url)
-	data = response.json()['Alert']
-
 	gateways = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_gateway')
 	wearers = Fetch_Total_Rows('SELECT COUNT(*) FROM tbl_wearer')
-
-
 
 	return render(request,
 				  'latest_alert.html',

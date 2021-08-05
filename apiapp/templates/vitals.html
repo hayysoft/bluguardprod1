@@ -63,14 +63,39 @@
             locations[i][1] = Number(locations[i][1]);
             locations[i][2] = Number(locations[i][2]);
         }
-        console.log(locations);
+
+        let username = '{{ request.user }}';
+
+        function initialCoords(username) {
+            let lat;
+            let lng
+            for (let i = 0; i < locations.length; i++) {
+                if (username === 'singapore') {
+                    lat = 1.3717726;
+                    lng = 103.9409175;
+                }else if (username === locations[i][5]) {
+                    lat = locations[i][1];
+                    lng = locations[i][2];
+                } else if (username === 'hayysoft') {
+                    lat = 1.3717726;
+                    lng = 103.9409175;
+                }
+            }
+            return {lat, lng};
+        }
 
         function initMap() {
+            let coords = initialCoords(username);
+            let lat = coords['lat'];
+            let lng = coords['lng'];
+
             var map = new google.maps.Map(document.getElementById('map'), {
-                zoom: 2,
-                center: new google.maps.LatLng(12.974230724913145, 77.61558795330865),
-                mapTypeId: google.maps.MapTypeId.ROADMAP,
+                zoom:17,
+                center: new google.maps.LatLng(lat, lng),
+                // mapTypeId: google.maps.MapTypeId.ROADMAP,
+                mapTypeId: 'satellite',
             });
+
 
             var infowindow = new google.maps.InfoWindow();
 
@@ -141,13 +166,6 @@
                 </tbody>
             </table>
         </div>
-        <!-- Device_ID, Wearer_ID,
-        Device_Temp, Device_HR,
-        Device_O2,
-        Device_Last_Updated_Date,
-        Device_Last_Updated_Time,
-        Incorrect_Data_Flag,
-        Wearer_Nick -->
         <div class="devices-table">
             <table class="table table-striped table-hover" id="device-table">
                 <thead>
@@ -167,78 +185,10 @@
                     </tr>
                 </thead>
                 <tbody class="tbody-data">
-                    <!-- {% for device in devices_ %}
-                        <tr>
-                            {% if device.Device_Status == 'OFFLINE' %}
-                                <td style="color: red;">{{ device.Device_Status }}</td>
-                            {% else %}
-                                <td style="color: green;">{{ device.Device_Status }}</td>
-                            {% endif %}
 
-                            {% if device.Device_Temp > 37 %}
-                                <td style="color: red;">{{ device.Device_Temp }}</td>
-                            {% elif device.Device_Temp < 33 %}
-                                <td style="color: green;">{{ device.Device_Temp }}</td>
-                            {% else %}
-                                <td style="color: blue;">{{ device.Device_Temp }}</td>
-                            {% endif %}
-
-                            {% if device.Device_O2 > 78 %}
-                                <td style="color: red;">{{ device.Device_O2 }}</td>
-                            {% elif device.Device_O2 < 70 %}
-                                <td style="color: green;">{{ device.Device_O2 }}</td>
-                            {% else %}
-                                <td style="color: blue;">{{ device.Device_O2 }}</td>
-                            {% endif %}
-
-                            {% if device.Device_Bat_Level > 180 %}
-                                <td style="color: red;">{{ device.Device_Bat_Level }}</td>
-                            {% elif device.Device_Bat_Level < 50 %}
-                                <td style="color: green;">{{ device.Device_Bat_Level }}</td>
-                            {% else %}
-                                <td style="color: blue;">{{ device.Device_Bat_Level }}</td>
-                            {% endif %}
-
-                            <td>{{ device.Device_HR }}</td>
-                            {% if device.Incorrect_Data_Flag == 1 %}
-                                <td style="color: red;">Bad</td>
-                            {% else %}
-                                <td style="color: green;">Good</td>
-                            {% endif %}
-                            <td>{{ device.Device_Last_Updated_Date }}</td>
-                            <td>{{ device.Device_Last_Updated_Time }}</td>
-                            <td>{{ device.Device_Mac }}</td>
-                        </tr>
-                    {% endfor %} -->
                 </tbody>
             </table>
         </div>
-
-
-        <!-- <div class="alerts-table alerts">
-            <table class="table table-striped table-hover" id="device-table">
-                <thead>
-                    <tr>
-                        <th>Alert_ID</th>
-                        <th>Device</th>
-                        <th>Wearer</th>
-                        <th>Ack</th>
-                        <th>Alert Date/Time</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for alert in alerts_ %}
-                        <tr>
-                            <td>{{ alert.Alert_ID }}</td>
-                            <td>{{ alert.Device_ID }}</td>
-                            <td>{{ alert.Device_Last_Updated_Date }}</td>
-                            <td>{{ alert.Device_Last_Updated_Time }}</td>
-                            <td>{{ alert.Ack }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div> -->
     </div>
 {% endblock %}
 
@@ -257,28 +207,7 @@
             });
         }
 
-        // var gateway_select = $('.gateway-select');
-        // var gateways_table = $('.gateways-table');
-
-        // var gateway_select = document.querySelector('.gateway-select');
-        // var gateway_select = document.querySelector('.gateways-table');
-
-        // var device_select = $('.device-select');
-        // var devices_table = $('.devices-table');
-
-        // var alert_select = $('.alert-select');
-        // var alerts_table = $('.alerts-table');
-
-        // toggleClasseVisibility(gateway_select, gateways_table, 'gateways');
-        // toggleClasseVisibility(device_select, devices_table, 'devices');
-        // toggleClasseVisibility(alert_select, alerts_table, 'alerts');
-
-
-
-
-
         let tbody = document.querySelector('.tbody-data');
-
 
         function fetchDevices () {
             fetch('http://52.237.83.22:5050/Lastest_Device_Data/')
