@@ -754,6 +754,7 @@ def Lastest_Device_Data(request):
 		    	TBL_Device
 		    WHERE
 		        Device_Type <> %s
+		    ORDER BY Device_Tag;
 		'''
 		parameter = ('HSWB004', )
 		Cursor.execute(query, parameter)
@@ -778,6 +779,7 @@ def Lastest_Device_Data(request):
 		    WHERE
 		        Device_Type <> %s AND
 		        Username = %s
+		    ORDER BY Device_Tag;
 		'''
 		parameters = ('HSWB004', request.user.username)
 		Cursor.execute(query, parameters)
@@ -918,6 +920,7 @@ def Quanrantine_Surveillance_Data(request):
 			TBL_Device
 		WHERE
 			Device_Type = %s
+		ORDER BY Device_Tag;
 		'''
 		parameter = ('HSWB004', )
 		Cursor.execute(query, parameter)
@@ -931,6 +934,7 @@ def Quanrantine_Surveillance_Data(request):
 			WHERE
 				Device_Type = %s AND
 				Username = %s
+			ORDER BY Device_Tag;
 		'''
 		parameters = ('HSWB004', request.user.username)
 		Cursor.execute(query, parameters)
