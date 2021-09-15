@@ -15,6 +15,8 @@ urlpatterns = [
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('auth-login/', include('rest_framework.urls')),
+
+    path('api/v1/app/', include('apiapp.mobile_app_urls')),
 ]
 
 

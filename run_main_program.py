@@ -54,7 +54,7 @@ os.chdir('C:/Users/hayysoft/Documents/BluguardScripts')
 
 # X('python Process_Device_Alerts.py')
 
-X('pyinstaller --onefile Run_Main_Program.py')
+X('pyinstaller --onefile Send_Alert_To_Users.py')
 
 
 

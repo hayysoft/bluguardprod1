@@ -424,15 +424,15 @@ def Post_Wearer_Login(request):
 	Cursor = Connector.cursor()
 
 	data = json.loads(request.body)
-	Wearer_Nick = data['Wearer_Nick']
-	Wearer_Pwd = data['Wearer_Pwd']
+	User_LogIn = data['Wearer_Nick']
+	User_Pwd = data['Wearer_Pwd']
 
 	query = '''
-		SELECT * FROM tbl_wearer
-		WHERE Wearer_Nick = %s AND
-			  Wearer_Pwd = %s
+		SELECT * FROM tbl_user
+		WHERE User_LogIn = %s AND
+			  User_Pwd = %s
 	'''
-	parameters = (Wearer_Nick, Wearer_Pwd)
+	parameters = (User_LogIn, User_Pwd)
 	Cursor.execute(query, parameters)
 	results = Cursor.fetchall()
 
@@ -724,9 +724,35 @@ def Get_All_Users(request):
 		{
 			'User_ID': row[0],
 			'User_Name': row[1],
-			'Device_ID': row[2]
+			'Device_ID': ''
 		} for row in results
 	]
+
+	data = []
+	for row in results:
+		User_ID = row[0]
+		query = '''
+			SELECT Device_ID FROM TBL_Device
+				WHERE Wearer_ID IN (
+					SELECT Wearer_ID FROM TBL_Wearer
+						WHERE User_ID = %s
+				)
+		'''
+		parameter = (User_ID,)
+		Cursor.execute(query, parameter)
+		results_ = dictfetchall(Cursor)
+		try:
+			Device_ID = results_[0]['Device_ID']
+		except:
+			Device_ID = ''
+
+		data.append({
+			'User_ID': User_ID,
+			'User_Name': row[1],
+			'Device_ID': Device_ID
+		})
+
+
 
 	return JsonResponse({
 		'User_IDs': data
@@ -1088,22 +1114,23 @@ def Post_Add_Subscription(request):
 @csrf_exempt
 def Post_Change_Password_Wearer(request):
 	data = json.loads(request.body)
-	Wearer_ID = data['Wearer_ID']
-	Wearer_Pwd = data['Wearer_Pwd']
+	User_LogIn = data['Wearer_ID']
+	User_Pwd = data['Wearer_Pwd']
 
 	Connector = mysql.connect(**config)
 	Cursor = Connector.cursor()
 
-	query = '''UPDATE tbl_wearer
-		SET Wearer_Pwd = %s
-		WHERE Wearer_ID = %s'''
-	parameter = (Wearer_Pwd, Wearer_ID)
+	query = '''UPDATE tbl_user
+				SET User_Pwd = %s
+				WHERE User_LogIn = %s
+	'''
+	parameter = (User_Pwd, User_LogIn)
 	Cursor.execute(query, parameter)
 	Connector.commit()
 
 
 	return JsonResponse({
-		'Change_Password-Tbl-Wearer': f'Password for Wearer_ID = {Wearer_ID} changed successfully!'
+		'Change_Password-Tbl-Wearer': f'Password for User_LogIn = {User_LogIn} changed successfully!'
 	})
 
 
