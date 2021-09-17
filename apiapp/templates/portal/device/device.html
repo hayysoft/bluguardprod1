@@ -80,12 +80,12 @@
 						<td>{{ row.Device_ID }}</td>
 						<td>{{ row.Device_Serial_No }}</td>
 						<td class="update-icon">
-							<a href="{% url 'apiapp:Device_Update' row.Device_ID %}">
+							<a href="{% url 'apiapp:Device_Update' row.Device_ID %}" style="text-decoration: none;">
 								&nbsp;Update
 							</a>
 						</td>
 						<td class="delete-icon">
-							<a href="{% url 'apiapp:Device_Delete' row.Device_ID %}">
+							<a href="{% url 'apiapp:Device_Delete' row.Device_ID %}" style="text-decoration: none; color: red;">
 								&nbsp;Delete
 							</a>
 						</td>
@@ -93,58 +93,5 @@
 				{% endfor %}
 	  		</tbody>
 		</table>
-
-
-
-		<!-- <table class="table table-striped table-hover" id="device-table">
-	  		<thead>
-	  			<tr>
-	  				<th>Wearer</th>
-	  				<th>Temp</th>
-	  				<th>HR</th>
-	  				<th>O2</th>
-	  				<th>Bat</th>
-	  				<th>LU_Date</th>
-	  				<th>LU_Time</th>
-	  				<th>Mac_ADD</th>
-	  				<th>Type</th>
-	  				<th>Device_ID</th>
-	  				<th>Serial_No</th>
-	  				<th></th>
-	  				<th></th>
-	  			</tr>
-	  		</thead>
-	  		<tbody>
-	  			{% for row in devices %}
-					<tr class="table-active">
-						<td>{{ row.wearer_id }}</td>
-						{% if row.device_temp > 38 %}
-							<td style="color:red; font-weight: bold;">{{ row.Device_Temp }}</td>
-						{% else %}
-							<td>{{ row.device_temp }}</td>
-						{% endif %}
-						<td>{{ row.device_hr }}</td>
-						<td>{{ row.device_o2 }}</td>
-						<td>{{ row.device_bat_level }}</td>
-						<td>{{ row.device_last_updated_date }}</td>
-						<td>{{ row.device_last_updated_time|time:"H:i:s" }}</td>
-						<td>{{ row.device_mac }}</td>
-						<td>{{ row.device_type }}</td>
-						<td>{{ row.device_id }}</td>
-						<td>{{ row.device_serial_no }}</td>
-						<td class="update-icon">
-							<a href="#">
-								&nbsp;Update
-							</a>
-						</td>
-						<td class="delete-icon">
-							<a href="#">
-								&nbsp;Delete
-							</a>
-						</td>
-					</tr>
-				{% endfor %}
-	  		</tbody>
-		</table> -->
 	</div>
 {% endblock %}

@@ -17,7 +17,9 @@
     {% include "base.html" %}
 	<div class="main-div">
 		<div class="row">
-			<a href="{% url 'apiapp:Gateway_Create' %}">Create a Gateway</a>
+			<a href="{% url 'apiapp:Gateway_Create' %}" style="width:150px; text-decoration: none;">
+				Create a Gateway
+			</a>
 		</div>
 		<div class="row">
 			{% if messages %}
@@ -59,11 +61,12 @@
 						<td>{{ row.Gateway_Longitude }}</td>
 						<td>{{ row.Gateway_Type }}</td>
 						<td>
-							<a href="{% url 'apiapp:Gateway_Update' row.Gateway_ID %}">	Update
+							<a href="{% url 'apiapp:Gateway_Update' row.Gateway_ID %}" style="text-decoration: none;">
+								Update
 							</a>
 						</td>
 						<td>
-							<a href="{% url 'apiapp:Gateway_Delete' row.Gateway_ID %}">
+							<a href="{% url 'apiapp:Gateway_Delete' row.Gateway_ID %}" style="text-decoration: none; color: red;">
 								Delete
 							</a>
 						</td>
@@ -72,4 +75,10 @@
 	  		</tbody>
 		</table>
 	</div>
+{% endblock %}
+
+
+{% block javascript %}
+    <script>
+    </script>
 {% endblock %}

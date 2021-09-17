@@ -81,26 +81,6 @@ def patient_page(request):
 				  {'patients': results})
 
 
-
-# def set_Q_Device_and_Q_Start(Device_ID, Patient_ID):
-# 	"""
-# 		Once user click on Start Then Update tbl patient
-# 		Q_Device field for the patient with the Device
-# 		ID of the quarantine band AND Q_Start
-# 		as CurrentDateTime
-# 	"""
-# 	Connector = mysql.connect(**config)
-# 	Cursor = Connector.cursor()
-
-# 	Device_ID = request.GET.get('Device_ID')
-# 	Patient_ID = request.GET.get('Patient_ID')
-
-# 	query = '''
-# 		(SELECT )
-# 	'''
-# 	pass
-
-
 def set_Q_Device_and_Q_Start(request):
 	Connector = mysql.connect(**config)
 	Cursor = Connector.cursor()
@@ -112,9 +92,6 @@ def set_Q_Device_and_Q_Start(request):
 	print(f'Wearer_ID = {Wearer_ID}')
 	print(f'Patient_Tag = {Patient_Tag}')
 
-	# query = '''
-	# 	(SELECT Start_Quarantine(%s, %s))
-	# '''
 	query = '''
 		Update tbl_crest_patient
 		set Q_Device_ID = %s,
@@ -123,36 +100,13 @@ def set_Q_Device_and_Q_Start(request):
 	'''
 	if Patient_Tag != '0' or Patient_Tag != '':
 		try:
-			# print(Patient_Tag)
 			parameters = (Device_ID, int(Patient_Tag))
 			Cursor.execute(query, parameters)
 			Connector.commit()
-			# print('Updated')
 		except Exception:
 			pass
 	else:
-		# print(Patient_Tag)
 		pass
-
-	# query = '''
-	# 	UPDATE TBL_Crest_Patient
-	# 	SET Q_Device_ID = %s
-	# 	WHERE Wearer_ID = %s
-	# '''
-
-	# parameter = (Device_ID, Wearer_ID)
-	# Cursor.execute(query, parameter)
-	# Connector.commit()
-
-	# query = '''
-	# 	UPDATE TBL_Crest_Patient
-	# 	SET Q_Start = CURRENT_TIMESTAMP()
-	# 	WHERE Wearer_ID = %s
-	# '''
-
-	# parameter = (Wearer_ID,)
-	# Cursor.execute(query, parameter)
-	# Connector.commit()
 
 	return JsonResponse({
 		'Status': f'Q_Start was updated!'
@@ -166,9 +120,6 @@ def set_Q_Device_and_Q_End(request):
 	Device_ID = request.GET.get('Device_ID')
 	Wearer_ID = request.GET.get('Wearer_ID')
 	Patient_Tag = request.GET.get('Patient_Tag')
-	# print(f'Device_ID = {Device_ID}')
-	# print(f'Wearer_ID = {Wearer_ID}')
-	# print(f'Patient_Tag = {Patient_Tag}')
 
 	query = '''
 		Update tbl_crest_patient
@@ -176,7 +127,6 @@ def set_Q_Device_and_Q_End(request):
 		Where Patient_Tag = %s;
 	'''
 	if Patient_Tag != '0' or Patient_Tag != '':
-		# print(Patient_Tag)
 		try:
 			parameters = (int(Patient_Tag),)
 			Cursor.execute(query, parameters)
@@ -223,29 +173,7 @@ def set_Q_Device_and_Q_End(request):
 		except Exception:
 			pass
 	else:
-		# print(Patient_Tag)
 		pass
-
-
-	# query = '''
-	# 	UPDATE TBL_Crest_Patient
-	# 	SET Q_Device_ID = %s
-	# 	WHERE Wearer_ID = %s
-	# '''
-
-	# parameter = (Device_ID, Wearer_ID)
-	# Cursor.execute(query, parameter)
-	# Connector.commit()
-
-	# query = '''
-	# 	UPDATE TBL_Crest_Patient
-	# 	SET Q_End = CURRENT_TIMESTAMP()
-	# 	WHERE Wearer_ID = %s
-	# '''
-
-	# parameter = (Wearer_ID,)
-	# Cursor.execute(query, parameter)
-	# Connector.commit()
 
 	return JsonResponse({
 		'Status': 'Q_End was updated!'

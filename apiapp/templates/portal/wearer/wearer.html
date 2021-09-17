@@ -17,7 +17,9 @@
     {% include "base.html" %}
 	<div class="main-div">
 		<div class="row">
-			<a href="{% url 'apiapp:Wearer_Create' %}">Create a Wearer</a>
+			<a href="{% url 'apiapp:Wearer_Create' %}" style="width:140px; text-decoration: none;">
+				Create a Wearer
+			</a>
 		</div>
 		<div class="row">
 			{% if messages %}
@@ -45,11 +47,12 @@
 						<td>{{ row.Wearer_ID }}</td>
 						<td>{{ row.Wearer_Nick }}</td>
 						<td>
-							<a href="{% url 'apiapp:Wearer_Update' row.Wearer_Nick %}">	Update
+							<a href="{% url 'apiapp:Wearer_Update' row.Wearer_Nick %}" style="text-decoration: none;">
+								Update
 							</a>
 						</td>
 						<td>
-							<a href="{% url 'apiapp:Wearer_Delete' row.Wearer_ID %}">
+							<a href="{% url 'apiapp:Wearer_Delete' row.Wearer_ID %}" style="text-decoration: none; color: red;">
 								Delete
 							</a>
 						</td>
