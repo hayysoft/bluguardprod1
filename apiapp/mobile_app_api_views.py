@@ -53,6 +53,14 @@ Connector = mysql.connect(**config)
 Cursor = Connector.cursor()
 
 
+
+def logout_page(request):
+    logout(request)
+    return JsonResponse({
+    	'message': 'Successfully logged out'
+    })
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 @csrf_exempt
@@ -73,20 +81,20 @@ def Get_Device_Details(request, Device_Mac):
 					del row["gateway_mac"]
 
 	return JsonResponse({
-		'file_data': file_data
+		'device_data': file_data
 	})
 
 
 
-@api_view(['POST'])
+@api_view(['GET'])
 @permission_classes([IsAuthenticated])
 @csrf_exempt
-def Vital_Surveillance(request):
+def Vital_Surveillance(request, User_ID):
 	Connector = mysql.connect(**config)
 	Cursor = Connector.cursor()
 
-	data = json.loads(request.body)
-	User_ID = data['User_ID']
+	# data = json.loads(request.body)
+	# User_ID = data['User_ID']
 
 	query = '''
 		SELECT Wearer_ID, Wearer_Nick FROM TBL_Wearer
@@ -109,6 +117,9 @@ def Vital_Surveillance(request):
 		parameter = (Wearer_ID,)
 		Cursor.execute(query, parameter)
 		results_ = dictfetchall(Cursor)
+
+		row['User_ID'] = User_ID
+
 		if len(results_) == 0:
 			row['Device_Temp'] = 0.0
 			row['Device_HR'] = 0
@@ -119,10 +130,10 @@ def Vital_Surveillance(request):
 			row['Device_HR'] = row_['Device_HR']
 			row['Device_O2'] = row_['Device_O2']
 
-		del row['Wearer_ID']
+		# del row['Wearer_ID']
 
 	return JsonResponse({
-		'Wearer_Data': results
+		'Vital_Surveillance_Data': results
 	})
 
 
@@ -144,48 +155,8 @@ def Wearers_Details(request, User_ID):
 	Cursor = Connector.cursor()
 
 	query = '''
-		SELECT Device_Mac FROM TBL_Device
+		SELECT Device_ID, Device_Type FROM TBL_Device
 			WHERE Wearer_ID IN (
-				SELECT Wearer_ID FROM TBL_Wearer
-					WHERE User_ID = %s
-			)
-	'''
-	parameter = (User_ID,)
-	Cursor.execute(query, parameter)
-	results = dictfetchall(Cursor)
-
-	for row in results:
-		Device_Mac = row['Device_Mac']
-		row['Device_Link'] = Get_Device_Details_Link(Device_Mac, User_ID)
-
-	return JsonResponse({
-		'Devices_Data': results
-	})
-
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def Alerts_Details(request, User_ID):
-	Connector = mysql.connect(**config)
-	Cursor = Connector.cursor()
-
-	# query = '''
-	# 	SELECT Device_ID FROM TBL_Alert
-	# 		WHERE Device_ID IN (
-	# 			SELECT Device_ID FROM TBL_Device
-	# 				WHERE Wearer_ID IN (
-	# 					SELECT Wearer_ID FROM TBL_Wearer
-	# 						WHERE User_ID = %s
-	# 				)
-	# 		)
-	# '''
-	query = '''
-		SELECT Wearer_ID FROM TBL_Device
-			WHERE Device_ID IN (
-				SELECT Device_ID FROM TBL_Alert
-		    ) AND
-		    Wearer_ID IN (
 				SELECT Wearer_ID FROM TBL_Wearer
 					WHERE User_ID = %s
 			)
@@ -199,7 +170,84 @@ def Alerts_Details(request, User_ID):
 	# 	row['Device_Link'] = Get_Device_Details_Link(Device_Mac, User_ID)
 
 	return JsonResponse({
-		'Wearer_Alerts': results
+		'Wearers_Data': results
+	})
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def Alerts_Details(request, User_ID):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	query = '''
+		SELECT Device_ID, Alert_Reading, Alert_Code, Alert_Datetime FROM TBL_Alert
+			WHERE Device_ID IN (
+				SELECT Device_ID FROM TBL_Device
+					WHERE Wearer_ID IN (
+						SELECT Wearer_ID FROM TBL_Wearer
+							WHERE User_ID = %s
+					)
+			)
+	'''
+	parameter = (User_ID,)
+	Cursor.execute(query, parameter)
+	results = dictfetchall(Cursor)
+	for row in results:
+		Device_ID = row['Device_ID']
+		query = '''
+			SELECT Wearer_ID, Wearer_Nick FROM TBL_Wearer
+			WHERE User_ID IN (
+				SELECT User_ID FROM TBL_User
+					WHERE User_ID = %s
+			) AND Wearer_ID IN (
+				SELECT Wearer_ID FROM TBL_Device
+					WHERE Device_ID = %s
+			)
+		'''
+		parameters = (User_ID, Device_ID)
+		Cursor.execute(query, parameters)
+		results_ = dictfetchall(Cursor)
+		for row_ in results_:
+			row['Wearer_Nick'] = row_['Wearer_Nick']
+
+
+
+
+
+	# query = '''
+	# 	SELECT Wearer_ID, Wearer_Nick FROM TBL_Wearer
+	# 		WHERE User_ID IN (
+	# 			SELECT User_ID FROM TBL_User
+	# 				WHERE User_ID = %s
+	# 		)
+	# '''
+	# parameter = (User_ID,)
+	# Cursor.execute(query, parameter)
+	# results = dictfetchall(Cursor)
+
+	# for row in results:
+	# # 	Device_Mac = row['Device_Mac']
+	# # 	row['Device_Link'] = Get_Device_Details_Link(Device_Mac, User_ID)
+		
+	# 	Wearer_ID = row['Wearer_ID']
+	# 	query = '''
+	# 		SELECT Alert_Reading, Alert_Datetime FROM TBL_Alert
+	# 			WHERE Device_ID IN (
+	# 				SELECT Device_ID FROM TBL_Device
+	# 					WHERE Wearer_ID = %s
+	# 			)
+	# 	'''
+	# 	parameter = (Wearer_ID, )
+	# 	Cursor.execute(query, parameter)
+	# 	results_ = dictfetchall(Cursor)
+	# 	for row_ in results_:
+	# 		row['Alert_Reading'] = row_['Alert_Reading']
+	# 		row['Alert_Datetime'] =  row_['Alert_Datetime']
+
+	return JsonResponse({
+		'Wearers_Alerts': results
 	})
 
 
@@ -263,6 +311,42 @@ def Get_Alert_Details(request, User_ID, Wearer_ID):
 
 
 
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def Quanrantine_Surveillance_Data(request, User_ID):
+# 	Connector = mysql.connect(**config)
+# 	Cursor = Connector.cursor()
+
+# 	query = '''
+# 		SELECT * FROM TBL_Alert
+# 			WHERE Device_ID IN (
+# 				SELECT Device_ID FROM TBL_Device
+# 					WHERE Wearer_ID IN (
+# 						SELECT Wearer_ID FROM TBL_Wearer
+# 							WHERE User_ID = %s
+# 					) AND Wearer_ID = %s
+# 			);
+# 	'''
+# 	parameters = (User_ID, Wearer_ID)
+# 	Cursor.execute(query, parameters)
+# 	results = dictfetchall(Cursor)
+
+# 	for row in results:
+# 		del row['Alert_ID']
+# 		del row["Alert_Date"]
+# 		del row["Alert_Time"]
+# 		# del row["Device_ID"]
+# 		del row["Sent_To_Crest"]
+# 		row['Alert_Code'] = Get_Alert_Type(row['Alert_Code'])
+
+# 	return JsonResponse({
+# 		'Alerts_Details': results
+# 	})
+
+
+
+
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def Quanrantine_Surveillance_Data(request, User_ID):
@@ -270,27 +354,131 @@ def Quanrantine_Surveillance_Data(request, User_ID):
 	Cursor = Connector.cursor()
 
 	query = '''
-		SELECT * FROM TBL_Alert
-			WHERE Device_ID IN (
-				SELECT Device_ID FROM TBL_Device
-					WHERE Wearer_ID IN (
-						SELECT Wearer_ID FROM TBL_Wearer
-							WHERE User_ID = %s
-					) AND Wearer_ID = %s
-			);
+		SELECT Wearer_ID, Device_Status FROM TBL_Device
+			WHERE Device_Type = %s
 	'''
-	parameters = (User_ID, Wearer_ID)
-	Cursor.execute(query, parameters)
+	parameter = ('HSWB004', )
+	Cursor.execute(query, parameter)
 	results = dictfetchall(Cursor)
 
 	for row in results:
-		del row['Alert_ID']
-		del row["Alert_Date"]
-		del row["Alert_Time"]
-		# del row["Device_ID"]
-		del row["Sent_To_Crest"]
-		row['Alert_Code'] = Get_Alert_Type(row['Alert_Code'])
+		Wearer_ID = row['Wearer_ID']
+		query = '''
+			SELECT Wearer_ID, Wearer_Nick FROM TBL_Wearer
+				WHERE Wearer_ID = %s OR
+					  User_ID = %s
+		'''
+		parameters = (Wearer_ID, User_ID, )
+		Cursor.execute(query, parameters)
+		results = dictfetchall(Cursor)
+
+	# query = '''
+	# 	SELECT Wearer_ID, Wearer_Nick FROM TBL_Wearer
+	# 		WHERE User_ID IN (
+	# 			SELECT User_ID FROM TBL_User
+	# 				WHERE User_ID = %s
+	# 		)
+	# '''
+	# parameters = (User_ID, )
+	# Cursor.execute(query, parameters)
+	# results = dictfetchall(Cursor)
+
+	# for row in results:
+	# 	Wearer_ID = row['Wearer_ID']
+	# 	query = '''
+	# 		SELECT Device_Status FROM TBL_Device
+	# 			WHERE Wearer_ID = %s AND
+	# 			Device_Type = %s
+	# 	'''
+	# 	parameter = (Wearer_ID, 'HSWB004')
+	# 	Cursor.execute(query, parameter)
+	# 	results_ = dictfetchall(Cursor)
+	# 	for row_ in results_:
+	# 		row['Device_Status'] =  row_['Device_Status']
+
+	# 	del row['Wearer_ID']
 
 	return JsonResponse({
-		'Alerts_Details': results
+		'Quanrantine_Surveillance_Data': results
+	})
+
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def Support(request):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	data = json.loads(request.body)
+	result = None
+
+	try:
+		Wearer_ID = data['Wearer_ID']
+		Name = data['Name']
+		Email = data['Email']
+		Subject = data['Subject']
+		Message = data['Message']
+
+		query = '''
+			INSERT INTO TBL_Support (Support_ID, Support_Datetime, Name, Email, Subject, Message, Wearer_ID)
+			VALUES ((SELECT Create_PK('SUP')), CURRENT_TIMESTAMP(), %s, %s, 
+					 %s, %s, %s)
+		'''
+		parameters = (Name, Email, Subject, Message, Wearer_ID)
+		Cursor.execute(query, parameters)
+		Connector.commit()
+		result = 'Support created successfully'
+	except:
+		result = 'Support was not created'
+
+	return JsonResponse({
+		'Message': result
+	})
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def Get_User_Message(request, Wearer_ID): #User_ID,
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	query = '''
+		SELECT Message_ID, Message_Description, Message_Date, 
+			   Message_Time, Message_Type  FROM TBL_Message
+		WHERE Wearer_ID = %s
+	'''
+	parameters = (Wearer_ID, )
+	Cursor.execute(query, parameters)
+	results = dictfetchall(Cursor)
+
+	return JsonResponse({
+		'Messages': results
+	})
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def Invidual_Quarantine(request, Wearer_ID):
+	Connector = mysql.connect(**config)
+	Cursor = Connector.cursor()
+
+	query = '''
+		SELECT Breach_ID, Wearer_ID, Breach_St_DateTime, Breach_End_DateTime,
+			   TIMESTAMPDIFF(SECOND, Breach_St_DateTime, Breach_End_DateTime) AS
+			   Breach_Duration_In_Seconds
+		FROM TBL_Breach
+		WHERE Wearer_ID = %s
+		ORDER BY Breach_St_DateTime DESC
+		LIMIT 10
+	'''
+	parameter = (Wearer_ID, )
+	Cursor.execute(query, parameter)
+	results = dictfetchall(Cursor)
+
+	return JsonResponse({
+		'Breach_Details': results
 	})

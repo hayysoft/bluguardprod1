@@ -1258,11 +1258,16 @@ def Post_User_Login(request):
 	]
 	try:
 		results = data[0]
+		return JsonResponse({
+			'User_Info': results
+		}, status=200)
 	except IndexError:
-		results = []
+		return JsonResponse({
+			'User_Info': results
+		}, status=204)
 
-	return JsonResponse({
-		'User_Info': results
-	})
+	# return JsonResponse({
+	# 	'User_Info': results
+	# })
 
 
